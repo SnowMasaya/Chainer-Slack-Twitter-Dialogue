@@ -43,14 +43,15 @@ core_execute.py
 user.properties
 ChainerMachineTranslation*
 Py-StackExchange
-jawiki-latest-all-titles-in-ns0
+jawiki-latest-all-titles-in-ns0*
 data
 data/*
 word2vec.model*
 test.txt
 requests-oauthlib
 *.yml
-*.txt
+replay_twitter_data*
+source_twitter_data*
 *.log
 .envrc
 mecab-python*

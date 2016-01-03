@@ -1,1 +1,3 @@
-jot -r "$(wc -l jawiki-latest-all-titles-in-ns0)" 1 | paste - jawiki-latest-all-titles-in-ns0 | sort -n | cut -f 2- | head -n 5000
+
+
+jot -r "$(wc -l $1)" 1 | paste - $1 | sort -n | cut -f 2- | head -n 5000
