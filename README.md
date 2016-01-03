@@ -1,13 +1,21 @@
-Chainer Dialogue
+Chainer-Slack-Twitter-Dialogue
 ====
 
-This tool is making Dialogue Model
+This tool is making Dialogue Model for Slack
 
+Thsi tool has 3 functions
+
+1: Slack Communication
+2: Learning by the Chainer 
+3: Collect Twitter Data
 
 ## Description
 This tool is making the Dialogue Model
 
 If you see the detail about it, you see the below<br> 
+
+http://qiita.com/drafts/79ca7deeb976f50126d7
+
 #
 ### Install
 
@@ -37,17 +45,41 @@ source my_env/bin/activate
 ```
 pip install -r requirement.txt 
 ```
+
+####PrePare the Data
+
+PreTrain
+>[Wikipedia for Japanese]https://dumps.wikimedia.org/jawiki/latest/<br>
+Train
+>[Dialogue Data]https://sites.google.com/site/dialoguebreakdowndetection/<br>
+
+####PrePare Twitter Key 
+
+https://apps.twitter.com/
+
 Installing a library bellow
 ##Requirements
 
     Python 3.4+
-    numpy
+	Mecab and neolog-dict
+	numpy
     chainer
     ipython
     notebook
     jinja2
     pyzmq
     tornado
+    cython
+    gensim
+    PyYAML
+    requests
+    requests_oauthlib
+    djehuty
+    flask-slackbot
+    flask
+    mecab-python
+    future
+    websocket-client
 
 ####Confirm library
 
@@ -55,36 +87,40 @@ Installing a library bellow
 ipython
 ```
 
-Type command bellow
-```
-import math
-import sys
-import time
-
-import numpy as np
-import six
-
-import chainer
-from chainer import cuda
-import chainer.functions as F
-from chainer import optimizers
-```
-
 #
 ### Usage 
 #
+Learning Chainer
 ```
 *You execute python 
 ipython notebook
 ```
+
+Slack Communication
+```
+*You execute python
+cd slack
+python app.py
+```
+
+Get the Twitter Data
+
+```
+*You execute python
+cd twitter
+python twitter_get_usr_timeline.py
+python sqlite_twitter.py
+```
+
 #
-### Data Directory Structure 
+### Code Directory Structure 
 #
 ```
-samples/　　　　　... Sample model and Translation result
-  - middle/ 　　　　　... middle setteing
-train/　     　... training data set
-test/ 　　　　　　　... test data set
+Dialogue ipython notebook and Encoder Decoder Model
+  - slack/　　　　　... Slack Code
+  - util/　     　... Encoder Decoder tools
+  - twitter/ 　　　　　　　... Twitter Code
+  - word2vec/ 　　　　　　　... Word2Vec Code
 ```
 #
 ### Licence
