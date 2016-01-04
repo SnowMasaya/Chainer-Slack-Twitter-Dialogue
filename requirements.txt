@@ -10,9 +10,5 @@ gensim
 PyYAML
 requests
 requests_oauthlib
-djehuty
-flask-slackbot
-flask
-mecab-python
 future
 websocket-client
