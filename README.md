@@ -46,7 +46,7 @@ source my_env/bin/activate
 pip install -r requirement.txt 
 ```
 
-####PrePare the Data
+####Prepare the Data
 
 ```
 PreTrain
@@ -54,13 +54,19 @@ PreTrain
 Train
 >[Dialogue Data]https://sites.google.com/site/dialoguebreakdowndetection/<br>
 ```
-####PrePare Twitter Key 
+SQLite
+
+```
+touch twitter_data.db
+```
+
+####Prepare Twitter Key
 
 ```
 https://apps.twitter.com/
 ```
 
-####PrePare enviroment.yml 
+####Prepare enviroment.yml
 
 Twitter
 
@@ -72,6 +78,7 @@ twitter:
     token_secret: your token secret
     mecab: your mecab dictionary
 ```
+
 
 Slack
 
