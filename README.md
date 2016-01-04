@@ -48,18 +48,48 @@ pip install -r requirement.txt
 
 ####PrePare the Data
 
+```
 PreTrain
 >[Wikipedia for Japanese]https://dumps.wikimedia.org/jawiki/latest/<br>
 Train
 >[Dialogue Data]https://sites.google.com/site/dialoguebreakdowndetection/<br>
-
+```
 ####PrePare Twitter Key 
 
+```
 https://apps.twitter.com/
+```
+
+####PrePare enviroment.yml 
+
+Twitter
+
+```
+twitter:
+    consumer_key: your consumer key 
+    consumer_secret: your consumer secret
+    token: your api token
+    token_secret: your token secret
+    mecab: your mecab dictionary
+```
+
+Slack
+
+```
+slack:
+    api_token: your api token 
+    channel: your channel 
+    user: your user token
+    mecab: your mecab dictionary 
+```
+
 
 Installing a library bellow
+
 ##Requirements
 
+
+```
     Python 3.4+
 	Mecab and neolog-dict
 	numpy
@@ -80,6 +110,7 @@ Installing a library bellow
     mecab-python
     future
     websocket-client
+```
 
 ####Confirm library
 
@@ -91,12 +122,14 @@ ipython
 ### Usage 
 #
 Learning Chainer
+
 ```
 *You execute python 
 ipython notebook
 ```
 
 Slack Communication
+
 ```
 *You execute python
 cd slack
