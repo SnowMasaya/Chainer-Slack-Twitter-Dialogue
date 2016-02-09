@@ -14,7 +14,7 @@ This tool is making the Dialogue Model
 
 If you see the detail about it, you see the below<br> 
 
-http://qiita.com/drafts/79ca7deeb976f50126d7
+http://qiita.com/GushiSnow/items/79ca7deeb976f50126d7
 
 #
 ### Install
