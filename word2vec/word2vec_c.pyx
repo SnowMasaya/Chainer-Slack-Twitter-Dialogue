@@ -13,13 +13,14 @@ import numpy as np
 
 import chainer
 from chainer import cuda
-import chainer.function as F
+import chainer.functions as F
 import chainer.links as L
 import chainer.optimizers as O
 import pyximport
 pyximport.install()
 from adam import Adam
 from variable import Variable
+from chainer import serializers
 
 args = {}
 #args["data"]= "jawiki-latest-all-titles-in-ns0"
@@ -31,7 +32,7 @@ args['epoch'] = 10
 #model type (skipgram, cbow)
 args['model'] = 'skipgram'
 #choices=['hsm', 'ns', 'original']
-args['out_type'] = 'hsm'
+args['out_type'] = 'original'
 
 xp = np
 
@@ -53,7 +54,7 @@ class ContinuousBow(chainer.Chain):
     def __call__(self, x, context):
         h = None
         for c in context:
-            e = self.embed(c)
+            e = self.weight_xi(c)
             h = h + e if h is not None else e
 
         return self.loss_func(h, x)
@@ -69,7 +70,7 @@ class SkipGram(chainer.Chain):
     def __call__(self, x, context):
         loss = None
         for c in context:
-            e = self.embed(c)
+            e = self.weight_xi(c)
 
             loss_i = self.loss_func(e, x)
             loss = loss_i if loss is None else loss + loss_i
@@ -174,11 +175,12 @@ cdef execute_c():
             loss.backward()
             optimizer.update()
 
+        serializers.save_hdf5("word2vec_chainer.model", model)
         print(accum_loss)
 
     with open('word2vec.model', 'w') as f:
         f.write('%d %d\n' % (len(index2word), args["unit"]))
-        w = model.embed.W.data
+        w = model.weight_xi.W.data
         for i in range(w.shape[0]):
             v =  ' '.join(['%f' % v for v in w[i]])
             f.write('%s %s\n' % (index2word[i], v))
