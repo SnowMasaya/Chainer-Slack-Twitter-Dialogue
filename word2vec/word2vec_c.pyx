@@ -46,7 +46,7 @@ class ContinuousBow(chainer.Chain):
 
     def __init__(self, n_vocab, n_units, loo_func):
         super(ContinuousBow, self).__init__(
-            embed = F.EmbedID(n_vocab, args["unit"]),
+            weight_xi = F.EmbedID(n_vocab, args["unit"]),
             loss_func = loo_func,
         )
 
@@ -62,7 +62,7 @@ class SkipGram(chainer.Chain):
 
     def __init__(self, n_vocab, n_units, loss_func):
         super(SkipGram, self).__init__(
-            embed = L.EmbedID(n_vocab, n_units),
+            weight_xi = L.EmbedID(n_vocab, n_units),
             loss_func = loss_func
         )
 
