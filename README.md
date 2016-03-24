@@ -60,6 +60,53 @@ SQLite
 touch twitter_data.db
 ```
 
+### How to prepare the for dialogue Data
+
+#### About Wikipedia Data
+
+1: You set the wikipedia title data on the word2vec folder
+
+2: Rename the data to `jawiki-latest-all-titles-in-ns0`
+
+3: You execute the bellow script. You can get the Word2Vec Model
+
+https://github.com/SnowMasaya/Chainer-Slack-Twitter-Dialogue/blob/master/word2vec/word2vec_execute.py
+
+*
+
+If you try to confirm the this code, you have to reduce the wikipedia data.
+The below script is the get the 5000 random data
+
+```
+sh random_choice.sh {Wikipedia Title data name} > {Random 5000 Choosing Wikipedia Title data name}
+```
+
+https://github.com/SnowMasaya/Chainer-Slack-Twitter-Dialogue/blob/master/word2vec/random_choice.sh
+
+#### About Dialogue Data
+
+1: You have to make the `data` folder
+
+2: You get the [Broken Dialogue corpus](https://sites.google.com/site/dialoguebreakdowndetection/). And you make the file bellow
+
+```
+dev/〇〇.json
+dev/■ ■.json
+dev/◇◇◇.json
+```
+
+3: It is possible to split the data `player_1`, `player_2` in the bellow script
+
+https://github.com/SnowMasaya/Chainer-Slack-Twitter-Dialogue/blob/master/data_load.py
+
+4: You have to split the each word in the sentence. You use [mecab](http://mecab.googlecode.com/svn/trunk/mecab/doc/index.html?sess=3f6a4f9896295ef2480fa2482de521f6) library.
+And you set the bellow data on the `data` folder 
+
+```
+player_1_wakati
+player_2_wakati
+```
+
 ####Prepare Twitter Key
 
 ```
