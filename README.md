@@ -30,6 +30,7 @@ Mac
 ```
 brew install pyenv 
 brew install virtualenv 
+brew install homebrew/science/hdf5
 ```
 
 ####Prepare Inastall2
