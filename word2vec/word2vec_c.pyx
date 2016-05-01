@@ -23,8 +23,7 @@ from variable import Variable
 from chainer import serializers
 
 args = {}
-#args["data"]= "jawiki-latest-all-titles-in-ns0"
-args["data"]= "test.txt"
+args["data"]= "../Data/jawiki-latest-random-titles-in-ns0"
 args['unit'] = 300
 args['window'] = 5
 args['batchsize'] = 100

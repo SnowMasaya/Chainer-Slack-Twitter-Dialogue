@@ -6,7 +6,7 @@ from chainer import Chain, functions, links
 from Encoder import Encoder
 from Decoder import Decoder
 import numpy as np
-from Common_function import CommonFunction
+from util.Common_function import CommonFunction
 
 class EncoderDecoder(Chain):
     def __init__(self, vocab_size, embed_size, hidden_size):

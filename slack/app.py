@@ -16,6 +16,7 @@ from util.functions import trace, fill_batch
 from util.vocabulary import Vocabulary
 import MeCab
 
+
 class SlackApp():
 
     def __init__(self, data_model):

@@ -43,7 +43,8 @@ source my_env/bin/activate
 ```
 
 ```
-pip install -r requirement.txt 
+pip install -r requirement.txt
+pip install chainer=="1.5.1"
 ```
 
 ####Prepare the Data

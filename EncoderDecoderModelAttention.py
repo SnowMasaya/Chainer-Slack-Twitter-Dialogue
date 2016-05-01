@@ -10,12 +10,13 @@ from chainer import link
 import util.generators as gens
 from util.functions import trace, fill_batch
 from util.vocabulary import Vocabulary
-from EncoderDecoder import EncoderDecoder
+from Attention.attention_dialogue import AttentionDialogue
 from util.Common_function import CommonFunction
 import random
+from util.XP import XP
 
 
-class EncoderDecoderModel:
+class EncoderDecoderModelAttention:
 
     def __init__(self, parameter_dict):
         self.parameter_dict       = parameter_dict
@@ -33,26 +34,29 @@ class EncoderDecoderModel:
         self.word2vecFlag         = parameter_dict["word2vecFlag"]
         self.common_function = CommonFunction()
         self.model = "ChainerDialogue"
-        self.encdec               = parameter_dict["encdec"]
+        self.attention_dialogue   = parameter_dict["attention_dialogue"]
+        XP.set_library(False, 0)
+        self.XP = XP
 
-    def forward(self, src_batch, trg_batch, src_vocab, trg_vocab, encdec, is_training, generation_limit):
+    def forward(self, src_batch, trg_batch, src_vocab, trg_vocab, attention, is_training, generation_limit):
         pass
 
-    def forward_implement(self, src_batch, trg_batch, src_vocab, trg_vocab, encdec, is_training, generation_limit):
-        pass
+    def forward_implement(self, src_batch, trg_batch, src_vocab, trg_vocab, attention, is_training, generation_limit):
         batch_size = len(src_batch)
         src_len = len(src_batch[0])
         trg_len = len(trg_batch[0]) if trg_batch else 0
         src_stoi = src_vocab.stoi
         trg_stoi = trg_vocab.stoi
         trg_itos = trg_vocab.itos
-        encdec.reset(batch_size)
+        attention.reset()
 
         x = self.common_function.my_array([src_stoi('</s>') for _ in range(batch_size)], np.int32)
-        encdec.encode(x)
+        attention.embed(x)
         for l in reversed(range(src_len)):
             x = self.common_function.my_array([src_stoi(src_batch[k][l]) for k in range(batch_size)], np.int32)
-            encdec.encode(x)
+            attention.embed(x)
+
+        attention.encode()
 
         t = self.common_function.my_array([trg_stoi('<s>') for _ in range(batch_size)], np.int32)
         hyp_batch = [[] for _ in range(batch_size)]
@@ -60,7 +64,7 @@ class EncoderDecoderModel:
         if is_training:
             loss = self.common_function.my_zeros((), np.float32)
             for l in range(trg_len):
-                y = encdec.decode(t)
+                y = attention.decode(t)
                 t = self.common_function.my_array([trg_stoi(trg_batch[k][l]) for k in range(batch_size)], np.int32)
                 loss += functions.softmax_cross_entropy(y, t)
                 output = cuda.to_cpu(y.data.argmax(1))
@@ -70,7 +74,7 @@ class EncoderDecoderModel:
 
         else:
             while len(hyp_batch[0]) < generation_limit:
-                y = encdec.decode(t)
+                y = attention.decode(t)
                 output = cuda.to_cpu(y.data.argmax(1))
                 t = self.common_function.my_array(output, np.int32)
                 for k in range(batch_size):
@@ -87,10 +91,10 @@ class EncoderDecoderModel:
         trg_vocab = Vocabulary.new(gens.word_list(self.target), self.vocab)
 
         trace('making model ...')
-        encdec = EncoderDecoder(self.vocab, self.embed, self.hidden)
+        self.attention_dialogue = AttentionDialogue(self.vocab, self.embed, self.hidden, self.XP)
         if self.word2vecFlag:
-            self.copy_model(self.word2vec, encdec.enc)
-            self.copy_model(self.word2vec, encdec.dec, dec_flag=True)
+            self.copy_model(self.word2vec, self.attention_dialogue.emb)
+            self.copy_model(self.word2vec, self.attention_dialogue.decdoce, dec_flag=True)
 
         for epoch in range(self.epoch):
             trace('epoch %d/%d: ' % (epoch + 1, self.epoch))
@@ -99,7 +103,7 @@ class EncoderDecoderModel:
             gen2 = gens.word_list(self.target)
             gen3 = gens.batch(gens.sorted_parallel(gen1, gen2, 100 * self.minibatch), self.minibatch)
             opt = optimizers.AdaGrad(lr = 0.01)
-            opt.setup(encdec)
+            opt.setup(self.attention_dialogue)
             opt.add_hook(optimizer.GradientClipping(5))
 
             random_number = random.randint(0, self.minibatch - 1)
@@ -107,9 +111,7 @@ class EncoderDecoderModel:
                 src_batch = fill_batch(src_batch)
                 trg_batch = fill_batch(trg_batch)
                 K = len(src_batch)
-                # If you use the ipython note book you hace to use the forward function
-                # hyp_batch, loss = self.forward(src_batch, trg_batch, src_vocab, trg_vocab, encdec, True, 0)
-                hyp_batch, loss = self.forward_implement(src_batch, trg_batch, src_vocab, trg_vocab, encdec, True, 0)
+                hyp_batch, loss = self.forward_implement(src_batch, trg_batch, src_vocab, trg_vocab, self.attention_dialogue, True, 0)
                 loss.backward()
                 opt.update()
 
@@ -121,8 +123,8 @@ class EncoderDecoderModel:
         prefix = self.model
         src_vocab.save(prefix + '.srcvocab')
         trg_vocab.save(prefix + '.trgvocab')
-        encdec.save_spec(prefix + '.spec')
-        serializers.save_hdf5(prefix + '.weights', encdec)
+        self.attention_dialogue.save_spec(prefix + '.spec')
+        serializers.save_hdf5(prefix + '.weights', self.attention_dialogue)
 
         trace('finished.')
 
@@ -130,8 +132,8 @@ class EncoderDecoderModel:
         trace('loading model ...')
         src_vocab = Vocabulary.load(self.model + '.srcvocab')
         trg_vocab = Vocabulary.load(self.model + '.trgvocab')
-        encdec = EncoderDecoder.load_spec(self.model + '.spec')
-        serializers.load_hdf5(self.model + '.weights', encdec)
+        self.attention_dialogue = AttentionDialogue.load_spec(self.model + '.spec', self.XP)
+        serializers.load_hdf5(self.model + '.weights', self.attention_dialogue)
 
         trace('generating translation ...')
         generated = 0
@@ -142,9 +144,7 @@ class EncoderDecoderModel:
                 K = len(src_batch)
 
                 trace('sample %8d - %8d ...' % (generated + 1, generated + K))
-                # If you use the ipython note book you hace to use the forward function
-                # hyp_batch = self.forward(src_batch, None, src_vocab, trg_vocab, encdec, False, self.generation_limit)
-                hyp_batch = self.forward_implement(src_batch, None, src_vocab, trg_vocab, encdec, False, self.generation_limit)
+                hyp_batch = self.forward_implement(src_batch, None, src_vocab, trg_vocab, self.attention_dialogue, False, self.generation_limit)
 
                 source_cuont = 0
                 for hyp in hyp_batch:
@@ -160,6 +160,8 @@ class EncoderDecoderModel:
         trace('finished.')
 
     def print_out(self, K, i_epoch, trained, src_batch, trg_batch, hyp_batch):
+        if K > len(src_batch) and K > len(trg_batch) and K > len(hyp_batch):
+            K = len(src_batch) - 1
 
         trace('epoch %3d/%3d, sample %8d' % (i_epoch + 1, self.epoch, trained + K + 1))
         trace('  src = ' + ' '.join([x if x != '</s>' else '*' for x in src_batch[K]]))

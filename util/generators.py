@@ -1,4 +1,10 @@
 def batch(generator, batch_size):
+    """
+    call the batch function
+    :param generator: make the bath data
+    :param batch_size: setting the batch size
+    :return: batch tuple
+    """
     batch = []
     is_tuple = False
     for l in generator:
@@ -11,6 +17,14 @@ def batch(generator, batch_size):
         yield tuple(list(x) for x in zip(*batch)) if is_tuple else batch
 
 def sorted_parallel(generator1, generator2, pooling, order=1):
+    """
+    sort parallerl source and target
+    :param generator1:
+    :param generator2:
+    :param pooling:
+    :param order:
+    :return:
+    """
     gen1 = batch(generator1, pooling)
     gen2 = batch(generator2, pooling)
     for batch1, batch2 in zip(gen1, gen2):
