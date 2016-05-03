@@ -28,6 +28,15 @@ class AttentionDecoder(Chain):
         )
 
     def __call__(self, target, current, hidden, annotation, back_word):
+        """
+        Attention Decoder
+        :param target(list): target word list
+        :param current:
+        :param hidden:
+        :param annotation:
+        :param back_word:
+        :return:
+        """
         embed = functions.tanh(self.embed_vocab(target))
         current, hidden = functions.lstm(current, self.embed_hidden(embed) + self.hidden_hidden(hidden) +
                               self.annotation_hidden(annotation) + self.back_word_hidden(back_word))
