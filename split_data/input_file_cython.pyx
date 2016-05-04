@@ -5,7 +5,7 @@ import csv
 csv.field_size_limit(1760000000)
 
 
-class InputFile():
+class InputFileCython():
     """Input file class.
 
     This class read the a varity of file such as the csv, txt, tsv

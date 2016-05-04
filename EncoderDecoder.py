@@ -11,8 +11,8 @@ from util.Common_function import CommonFunction
 class EncoderDecoder(Chain):
     def __init__(self, vocab_size, embed_size, hidden_size):
         super(EncoderDecoder, self).__init__(
-            enc = Encoder(vocab_size, embed_size, hidden_size),
-            dec = Decoder(vocab_size, embed_size, hidden_size),
+            enc=Encoder(vocab_size, embed_size, hidden_size),
+            dec=Decoder(vocab_size, embed_size, hidden_size),
         )
         self.vocab_size = vocab_size
         self.embed_size = embed_size

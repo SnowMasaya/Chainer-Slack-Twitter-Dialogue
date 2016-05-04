@@ -2,7 +2,9 @@
 #-*- coding:utf-8 -*-
 #!/usr/bin/python3
 
-import numpy as np
+import sys
+import os
+sys.path.append(os.path.join(os.path.dirname(__file__), "../"))
 
 from chainer import Chain, Variable, cuda, functions, links, optimizer, optimizers, serializers
 from chainer import link
@@ -11,14 +13,21 @@ import util.generators as gens
 from util.functions import trace, fill_batch
 from util.vocabulary import Vocabulary
 from Attention.attention_dialogue import AttentionDialogue
-from util.Common_function import CommonFunction
 import random
 from util.XP import XP
+from os import path
+APP_ROOT = path.dirname(path.abspath(__file__))
 
 
 class EncoderDecoderModelAttention:
 
     def __init__(self, parameter_dict):
+        """
+        Initial Paramater Setting
+        :param parameter_dict: setting the a varity of paramater
+        If you use gpu, you setting the bellow paramater
+            XP.set_library(True, {your gpu id})
+        """
         self.parameter_dict       = parameter_dict
         self.source               = parameter_dict["source"]
         self.target               = parameter_dict["target"]
@@ -30,9 +39,8 @@ class EncoderDecoderModelAttention:
         self.epoch                = parameter_dict["epoch"]
         self.minibatch            = parameter_dict["minibatch"]
         self.generation_limit     = parameter_dict["generation_limit"]
-        self.word2vec             = parameter_dict["word2vec"]
-        self.word2vecFlag         = parameter_dict["word2vecFlag"]
-        self.common_function = CommonFunction()
+        self.word2vec = parameter_dict["word2vec"]
+        self.word2vecFlag = parameter_dict["word2vecFlag"]
         self.model = "ChainerDialogue"
         self.attention_dialogue   = parameter_dict["attention_dialogue"]
         XP.set_library(False, 0)
@@ -42,6 +50,17 @@ class EncoderDecoderModelAttention:
         pass
 
     def forward_implement(self, src_batch, trg_batch, src_vocab, trg_vocab, attention, is_training, generation_limit):
+        """
+        chainer forward method
+        :param src_batch(lise): source_sentence
+        :param trg_batch(lise):
+        :param src_vocab:
+        :param trg_vocab:
+        :param attention:
+        :param is_training(boolean): setting the traing flag
+        :param generation_limit(int): useing method for predict
+        :return:
+        """
         batch_size = len(src_batch)
         src_len = len(src_batch[0])
         trg_len = len(trg_batch[0]) if trg_batch else 0
@@ -50,22 +69,22 @@ class EncoderDecoderModelAttention:
         trg_itos = trg_vocab.itos
         attention.reset()
 
-        x = self.common_function.my_array([src_stoi('</s>') for _ in range(batch_size)], np.int32)
+        x = self.XP.iarray([src_stoi('</s>') for _ in range(batch_size)])
         attention.embed(x)
         for l in reversed(range(src_len)):
-            x = self.common_function.my_array([src_stoi(src_batch[k][l]) for k in range(batch_size)], np.int32)
+            x = self.XP.iarray([src_stoi(src_batch[k][l]) for k in range(batch_size)])
             attention.embed(x)
 
         attention.encode()
 
-        t = self.common_function.my_array([trg_stoi('<s>') for _ in range(batch_size)], np.int32)
+        t = self.XP.iarray([trg_stoi('<s>') for _ in range(batch_size)])
         hyp_batch = [[] for _ in range(batch_size)]
 
         if is_training:
-            loss = self.common_function.my_zeros((), np.float32)
+            loss = self.XP.fzeros(())
             for l in range(trg_len):
                 y = attention.decode(t)
-                t = self.common_function.my_array([trg_stoi(trg_batch[k][l]) for k in range(batch_size)], np.int32)
+                t = self.XP.iarray([trg_stoi(trg_batch[k][l]) for k in range(batch_size)])
                 loss += functions.softmax_cross_entropy(y, t)
                 output = cuda.to_cpu(y.data.argmax(1))
                 for k in range(batch_size):
@@ -76,7 +95,7 @@ class EncoderDecoderModelAttention:
             while len(hyp_batch[0]) < generation_limit:
                 y = attention.decode(t)
                 output = cuda.to_cpu(y.data.argmax(1))
-                t = self.common_function.my_array(output, np.int32)
+                t = self.XP.iarray(output)
                 for k in range(batch_size):
                     hyp_batch[k].append(trg_itos(output[k]))
                 if all(hyp_batch[k][-1] == '</s>' for k in range(batch_size)):
@@ -84,8 +103,12 @@ class EncoderDecoderModelAttention:
 
         return hyp_batch
 
-
     def train(self):
+        """
+        Train method
+        If you use the word2vec model, you possible to use the copy weight
+        Optimizer method use the Adagrad
+        """
         trace('making vocabularies ...')
         src_vocab = Vocabulary.new(gens.word_list(self.source), self.vocab)
         trg_vocab = Vocabulary.new(gens.word_list(self.target), self.vocab)
@@ -94,7 +117,7 @@ class EncoderDecoderModelAttention:
         self.attention_dialogue = AttentionDialogue(self.vocab, self.embed, self.hidden, self.XP)
         if self.word2vecFlag:
             self.copy_model(self.word2vec, self.attention_dialogue.emb)
-            self.copy_model(self.word2vec, self.attention_dialogue.decdoce, dec_flag=True)
+            self.copy_model(self.word2vec, self.attention_dialogue.dec, dec_flag=True)
 
         for epoch in range(self.epoch):
             trace('epoch %d/%d: ' % (epoch + 1, self.epoch))
@@ -121,19 +144,26 @@ class EncoderDecoderModelAttention:
 
         trace('saving model ...')
         prefix = self.model
-        src_vocab.save(prefix + '.srcvocab')
-        trg_vocab.save(prefix + '.trgvocab')
-        self.attention_dialogue.save_spec(prefix + '.spec')
-        serializers.save_hdf5(prefix + '.weights', self.attention_dialogue)
+        model_path = APP_ROOT + "/model/" + prefix
+        src_vocab.save(model_path + '.srcvocab')
+        trg_vocab.save(model_path + '.trgvocab')
+        self.attention_dialogue.save_spec(model_path + '.spec')
+        serializers.save_hdf5(model_path + '.weights', self.attention_dialogue)
 
         trace('finished.')
 
     def test(self):
+        """
+        Test method
+        You have to parepare the train model
+        """
         trace('loading model ...')
-        src_vocab = Vocabulary.load(self.model + '.srcvocab')
-        trg_vocab = Vocabulary.load(self.model + '.trgvocab')
-        self.attention_dialogue = AttentionDialogue.load_spec(self.model + '.spec', self.XP)
-        serializers.load_hdf5(self.model + '.weights', self.attention_dialogue)
+        prefix = self.model
+        model_path = APP_ROOT + "/model/" + prefix
+        src_vocab = Vocabulary.load(model_path + '.srcvocab')
+        trg_vocab = Vocabulary.load(model_path + '.trgvocab')
+        self.attention_dialogue = AttentionDialogue.load_spec(model_path + '.spec', self.XP)
+        serializers.load_hdf5(model_path + '.weights', self.attention_dialogue)
 
         trace('generating translation ...')
         generated = 0
@@ -160,6 +190,16 @@ class EncoderDecoderModelAttention:
         trace('finished.')
 
     def print_out(self, K, i_epoch, trained, src_batch, trg_batch, hyp_batch):
+        """
+        Print out
+        :param K:
+        :param i_epoch:
+        :param trained: train times
+        :param src_batch:
+        :param trg_batch:
+        :param hyp_batch:
+        :return:
+        """
         if K > len(src_batch) and K > len(trg_batch) and K > len(hyp_batch):
             K = len(src_batch) - 1
 
@@ -168,12 +208,20 @@ class EncoderDecoderModelAttention:
         trace('  trg = ' + ' '.join([x if x != '</s>' else '*' for x in trg_batch[K]]))
         trace('  hyp = ' + ' '.join([x if x != '</s>' else '*' for x in hyp_batch[K]]))
 
+
     def copy_model(self, src, dst, dec_flag=False):
+        """
+        Weight Copyt method
+        :param src: Word2Vec Model
+        :param dst: Dialogue Model
+        :param dec_flag: Decoder flag
+        :return:
+        """
         print("start copy")
         for child in src.children():
             if dec_flag:
-                if dst["weight_jy"] and child.name == "weight_xi" and self.word2vecFlag:
-                    for a, b in zip(child.namedparams(), dst["weight_jy"].namedparams()):
+                if dst["embded_target"] and child.name == "weight_xi" and self.word2vecFlag:
+                    for a, b in zip(child.namedparams(), dst["embded_target"].namedparams()):
                         b[1].data = a[1].data
                     print('Copy weight_jy')
             if child.name not in dst.__dict__: continue

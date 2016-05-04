@@ -3,8 +3,8 @@
 import json
 
 f = open("list", "r")
-player_1 = open("player_1", "w")
-player_2 = open("player_2", "w")
+player_1 = open("player_1.txt", "w")
+player_2 = open("player_2.txt ", "w")
 count = 0
 
 for line in f.readlines():

@@ -6,7 +6,9 @@ import os
 sys.path.append(os.path.join(os.path.dirname(__file__), "../"))
 from input_file import InputFile
 from split_synonym_class import SplitSynonymClass
-from wiki_vector_summary import WikiVectorSummary
+import pyximport
+pyximport.install()
+from wiki_vector_summary_cython import WikiVectorSummaryCython
 from os import path
 APP_ROOT = path.dirname(path.abspath(__file__))
 
@@ -22,7 +24,7 @@ class Test_WikiVectorSummary(unittest.TestCase):
             data: test file name
             split_module: setting the split_module instance
         """
-        wiki_vector_file_name = APP_ROOT + '/../../Data/jawiki_vector/jawiki_vector.txt'
+        wiki_vector_file_name = APP_ROOT + '/../../Data/jawiki_vector/jawiki_vector_random.txt'
         self.word_net_file_name = APP_ROOT + '/../../Data/wnjpn-all.tab'
         self.input_module = InputFile(wiki_vector_file_name)
 
@@ -41,7 +43,7 @@ class Test_WikiVectorSummary(unittest.TestCase):
         all_dict = self.split_synonym_class.get_all_dict()
         # test split dict
         split_dict = self.split_synonym_class.get_split_dict()
-        self.wiki_vector_summary = WikiVectorSummary(all_dict, split_dict, wiki_vector)
+        self.wiki_vector_summary = WikiVectorSummaryCython(all_dict, split_dict, wiki_vector)
         self.wiki_vector_summary.get_similler_word()
         split_dict = self.wiki_vector_summary.get_split_dict()
         for k, v in split_dict.items():

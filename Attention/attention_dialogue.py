@@ -1,7 +1,7 @@
-#'!/usr/bin/env python
-#-*- coding:utf-8 -*-
-#!/usr/bin/python3
-from chainer import Chain, links, functions
+# '!/usr/bin/env python
+# -*- coding:utf-8 -*-
+# !/usr/bin/python3
+from chainer import Chain
 import sys
 import os
 sys.path.append(os.path.join(os.path.dirname(__file__), "."))
@@ -25,11 +25,11 @@ class AttentionDialogue(Chain):
         :return:
         """
         super(AttentionDialogue, self).__init__(
-            emb = SrcEmbed(vocab_size, embed_size),
-            forward_encode = AttentionEncoder(embed_size, hidden_size),
-            back_encdode   = AttentionEncoder(embed_size, hidden_size),
-            attention      = Attention(hidden_size),
-            dec            = AttentionDecoder(vocab_size, embed_size, hidden_size),
+            emb=SrcEmbed(vocab_size, embed_size),
+            forward_encode=AttentionEncoder(embed_size, hidden_size),
+            back_encdode=AttentionEncoder(embed_size, hidden_size),
+            attention=Attention(hidden_size),
+            dec=AttentionDecoder(vocab_size, embed_size, hidden_size),
         )
         self.vocab_size = vocab_size
         self.embed_size = embed_size
