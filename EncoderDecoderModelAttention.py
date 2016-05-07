@@ -41,7 +41,7 @@ class EncoderDecoderModelAttention:
         self.generation_limit     = parameter_dict["generation_limit"]
         self.word2vec = parameter_dict["word2vec"]
         self.word2vecFlag = parameter_dict["word2vecFlag"]
-        self.model = "ChainerDialogue"
+        self.model = parameter_dict["model"]
         self.attention_dialogue   = parameter_dict["attention_dialogue"]
         XP.set_library(False, 0)
         self.XP = XP
@@ -168,7 +168,7 @@ class EncoderDecoderModelAttention:
         trace('generating translation ...')
         generated = 0
 
-        with open(self.target, 'w') as fp:
+        with open(self.test_target, 'w') as fp:
             for src_batch in gens.batch(gens.word_list(self.source), self.minibatch):
                 src_batch = fill_batch(src_batch)
                 K = len(src_batch)

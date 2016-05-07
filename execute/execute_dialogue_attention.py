@@ -11,6 +11,7 @@ from EncoderDecoderModelAttention import EncoderDecoderModelAttention
 from word2vec.word2vec_load import SkipGram, SoftmaxCrossEntropyLoss
 from os import path
 APP_ROOT = path.dirname(path.abspath(__file__))
+import re
 
 
 class ExecuteAttentionDialogue(object):
@@ -66,7 +67,7 @@ class ExecuteAttentionDialogue(object):
         """
         学習回数。基本的に大きい方が良いが大きすぎると収束しないです。
         """
-        self.parameter_dict["epoch"] = 1
+        self.parameter_dict["epoch"] = 20
 
         """
         ミニバッチ学習で扱うサイズです。この点は経験的に調整する場合が多いが、基本的に大きくすると学習精度が向上する
@@ -86,6 +87,8 @@ class ExecuteAttentionDialogue(object):
 
         self.parameter_dict["attention_dialogue"] = ""
 
+        self.parameter_dict["model"] = "ChainerDialogue"
+
     def train(self):
         """
         Call the Dialogue Training
@@ -101,6 +104,29 @@ class ExecuteAttentionDialogue(object):
         trace('initializing ...')
         encoderDecoderModel = EncoderDecoderModelAttention(self.parameter_dict)
         encoderDecoderModel.test()
+
+    def train_mulit_model(self):
+        """
+        Call the Dialogue Training
+        """
+        trace('initializing ...')
+        train_path = APP_ROOT + "/../twitter/data/"
+        file_list = os.listdir(train_path)
+        twitter_source_dict = {}
+        twitter_replay_dict = {}
+        for file in file_list:
+            word_class = re.sub("_replay_twitter_data\.txt|_source_twitter_data\.txt|", file.strip())
+            if word_class not in twitter_source_dict:
+                twitter_source_dict.update({word_class: file.strip})
+            if word_class not in twitter_replay_dict:
+                twitter_replay_dict.update({word_class: file.strip})
+        for word_class in twitter_source_dict.keys():
+            self.parameter_dict["source"] = train_path + twitter_source_dict[word_class]
+            self.parameter_dict["target"] = train_path + twitter_replay_dict[word_class]
+            self.parameter_dict["model"] = "ChainerDialogue_" + word_class
+            encoderDecoderModel = EncoderDecoderModelAttention(self.parameter_dict)
+            encoderDecoderModel.train()
+
 
 if __name__ == '__main__':
     execute_attention_dialogue = ExecuteAttentionDialogue()

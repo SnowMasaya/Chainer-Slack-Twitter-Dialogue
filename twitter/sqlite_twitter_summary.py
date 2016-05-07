@@ -11,7 +11,7 @@ import operator
 import os
 
 
-class SqliteTwitterCython(object):
+class SqliteTwitterSummary(object):
     """
     Twitter Save to the SQLite
     """
@@ -31,20 +31,21 @@ class SqliteTwitterCython(object):
         conn = sqlite3.connect('./twitter_data.db')
         self.cur = conn.cursor()
         self.class_word_vector = class_word_vector
-        self.class_word_dict = {}
-        self.__make_class_word_dict()
+        self.class_word_dict = self.__make_class_word_dict()
 
     def __make_class_word_dict(self):
         """
         make remake the data format
         """
+        word_class_dict = {}
         for class_name, word_list in self.class_word_vector.items():
-            class_word_dict = {}
+            word_dict = {}
             for word in word_list:
-                if word not in class_word_dict:
-                    class_word_dict.update({word: 1})
-            if class_name not in self.class_word_dict:
-                self.class_word_dict.update({class_name: class_word_dict})
+                if word not in word_dict:
+                    word_dict.update({word: 1})
+            if class_name not in word_class_dict:
+                word_class_dict.update({class_name: word_dict})
+        return word_class_dict
 
     def call_sql(self):
         """
@@ -104,6 +105,12 @@ class SqliteTwitterCython(object):
         return split_nonum
 
     def __match_word_count(self, total_text, class_name):
+        """
+        count matthing word word class
+        :param total_text: source text and reply text
+        :param class_name: choose class name
+        :return: matthing count
+        """
         word_match_count = 0
         for word in total_text:
             if word in self.class_word_dict[class_name]:

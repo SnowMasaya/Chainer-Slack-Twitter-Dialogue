@@ -27,7 +27,7 @@ class SlackApp():
         self.slack_channel = data_model.slack_channel
         self.data = ""
         self.parameter = data_model.parameter_dict
-        self.model_name = "../execute/ChainerDialogue"
+        self.model_name = "../model/ChainerDialogue"
         self.generation_limit = 200
         """
         We confirm channel number
@@ -58,9 +58,9 @@ class SlackApp():
         """
         judge slack call for chainer
         Example:
-            @chainer:{your sentence}
+            chainer:{your sentence}
                 chainer return the sentence
-            @chainer_train:{your sentence}
+            chainer_train:{your sentence}
                 start train
         """
         if len(self.data) >= 1 and "text" in self.data[0]:

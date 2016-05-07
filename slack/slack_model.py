@@ -26,12 +26,13 @@ class SlackModel():
         self.parameter_dict["vocab"] = 5000
         self.parameter_dict["embed"] = 300
         self.parameter_dict["hidden"] = 300
-        self.parameter_dict["epoch"] = 5
+        self.parameter_dict["epoch"] = 20
         self.parameter_dict["minibatch"] = 64
         self.parameter_dict["generation_limit"] = 256
         self.parameter_dict["word2vec"] = "../word2vec/word2vec.model"
         self.parameter_dict["word2vecFlag"] = False
         self.parameter_dict["attention_dialogue"] = ""
+        self.parameter_dict["model"] = ""
 
     def read_config(self):
         """

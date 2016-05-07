@@ -19,8 +19,8 @@ class ClassSummaryCosineSimilarityCython():
         """
         self.__class_word = class_word
         self.__class_average_vector = class_average_vector
-        self.COSIN_SIMILARITY_LIMIT = 0.9
-        self.output_path = "/Users/masayaogushi/PycharmProjects/Study/Chainer-Slack-Twitter-Dialogue/Data/wn_test/"
+        self.COSIN_SIMILARITY_LIMIT = 0.6
+        self.output_path = "/Users/masayaogushi/PycharmProjects/Study/Chainer-Slack-Twitter-Dialogue/Data/wn_total_summary/"
         self.extension = "_summary.txt"
 
     def summary_class_use_cosine_similarity(self):
@@ -37,14 +37,11 @@ class ClassSummaryCosineSimilarityCython():
                 if class_name != class_name_check and class_name in self.__class_word:
                     cosine_similarity_value = self.__cosine_similarity(vector, vector_check)
                     if cosine_similarity_value > self.COSIN_SIMILARITY_LIMIT:
-                        print(class_name, class_name_check)
                         self.__summary_class(class_name, class_name_check)
                         self.__delete_class(class_name_check)
-                else:
-                    count = count + 1
+                count = count + 1
 
         print(len(self.__class_word))
-        print(count)
         self.__out_put_file()
 
     def __out_put_file(self):
@@ -78,9 +75,10 @@ class ClassSummaryCosineSimilarityCython():
             class_name_check(str): you set the word class name for summary
         """
         word_list = []
-
-        [word_list.append(word.replace(" ", "")) for word in self.__class_word[class_name]]
-        [word_list.append(word.replace(" ", "")) for word in self.__class_word[class_name_check]]
+        if class_name in self.__class_word:
+            [word_list.append(word.replace(" ", "")) for word in self.__class_word[class_name]]
+        if class_name_check in self.__class_word:
+            [word_list.append(word.replace(" ", "")) for word in self.__class_word[class_name_check]]
         self.__class_word.update({class_name: word_list})
 
     def __delete_class(self, class_name_check):
@@ -89,7 +87,9 @@ class ClassSummaryCosineSimilarityCython():
         Args:
             class_name_check(str): you set the delete word class
         """
-        del self.__class_average_vector[class_name_check]
-        del self.__class_word[class_name_check]
+        if class_name_check in self.__class_average_vector:
+            del self.__class_average_vector[class_name_check]
+        if class_name_check in self.__class_word:
+            del self.__class_word[class_name_check]
 
 

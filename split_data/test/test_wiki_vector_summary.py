@@ -24,8 +24,10 @@ class Test_WikiVectorSummary(unittest.TestCase):
             data: test file name
             split_module: setting the split_module instance
         """
-        wiki_vector_file_name = APP_ROOT + '/../../Data/jawiki_vector/jawiki_vector_random.txt'
+        wiki_vector_file_name = APP_ROOT + '/../../Data/jawiki_vector/jawiki_vector_delete_first.txt'
         self.word_net_file_name = APP_ROOT + '/../../Data/wnjpn-all.tab'
+        # wiki_vector_file_name = APP_ROOT + '/../../Data/jawiki_vector/jawiki_vector_part.txt'
+        # self.word_net_file_name = APP_ROOT + '/../../Data/wnjpn-all_part.tab'
         self.input_module = InputFile(wiki_vector_file_name)
 
     def test_summary_class(self):
@@ -47,7 +49,14 @@ class Test_WikiVectorSummary(unittest.TestCase):
         self.wiki_vector_summary.get_similler_word()
         split_dict = self.wiki_vector_summary.get_split_dict()
         for k, v in split_dict.items():
-            fo = open(APP_ROOT + "/../../Data/test/" + k + ".txt", 'w')
+            fo = open(APP_ROOT + "/../../Data/wn_summary_all/" + k + ".txt", 'w')
+            sys.stdout = fo
+            print(v)
+            fo.close()
+            sys.stdout = sys.__stdout__
+        class_average_vector = self.wiki_vector_summary.get_wiki_average_vector()
+        for k, v in class_average_vector.items():
+            fo = open(APP_ROOT + "/../../Data/wn_summary_all_class_average/" + k + ".txt_vector.txt", 'w')
             sys.stdout = fo
             print(v)
             fo.close()
