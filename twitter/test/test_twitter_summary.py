@@ -24,7 +24,7 @@ class Test_ClassSummaryCosineSimilarty(unittest.TestCase):
             data: test file name
             split_module: setting the split_module instance
         """
-        wn_summary_list = APP_ROOT + '/../../Data/wn_total_summary_list.txt'
+        wn_summary_list = APP_ROOT + '/../../Data/wn_total_summary_51519_limit05_out_put_list.txt'
         self.input_module = InputFileCython(wn_summary_list)
         self.input_module.input_special_format_file()
 
@@ -35,11 +35,11 @@ class Test_ClassSummaryCosineSimilarty(unittest.TestCase):
         file_list = self.input_module.get_file_data()
         class_word_vector = {}
         for file in file_list:
-            self.input_module = InputFileCython(APP_ROOT + "/../../Data/wn_summary/" + file.strip())
+            self.input_module = InputFileCython(APP_ROOT + "/../../Data/wn_total_summary_51519_limit05_out_put/" + file.strip())
             self.input_module.input_special_format_file()
             if file.strip() not in class_word_vector:
-                word_list = re.sub("\]|\[|\'", "", self.input_module.get_file_data()[0].strip())
-                class_word_vector.update({file.strip().replace(".txt", ""): word_list.split(",")})
+                word_list = (list(map(lambda x:x.strip(), self.input_module.get_file_data())))
+                class_word_vector.update({file.strip().replace("_summary.txt", ""): word_list})
         sqlite_twitter_cython = SqliteTwitterSummary(class_word_vector)
         sqlite_twitter_cython.call_sql()
 

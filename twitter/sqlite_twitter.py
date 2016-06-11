@@ -18,7 +18,7 @@ class SqliteTwitter(object):
         Get the mecab dict by the yaml
         """
         Twitter = namedtuple("Twitter", ["mecab"])
-        config_file = "enviroment.yml"
+        config_file = "enviroment_twitter.yml"
 
         with open(config_file, encoding="utf-8") as cf:
             e = yaml.load(cf)

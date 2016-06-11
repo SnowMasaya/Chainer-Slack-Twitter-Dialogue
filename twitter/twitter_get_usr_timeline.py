@@ -21,7 +21,7 @@ class TwitterGetUserTimeline():
         :return:
         """
         Twitter = namedtuple("Twitter", ["consumer_key", "consumer_secret", "token", "token_secret"])
-        config_file = "enviroment.yml"
+        config_file = "enviroment_twitter.yml"
 
         with open(config_file, encoding="utf-8") as cf:
              e = yaml.load(cf)
@@ -116,7 +116,7 @@ if __name__ == '__main__':
     # Twitter
     twitter_get_user_timeline.twitter_method(req)
     for k,v in twitter_get_user_timeline.twitter_txt_dict.items():
-        params = {"screen_name": k, "exclude_replies": False, "count": 1000}
+        params = {"screen_name": k, "exclude_replies": False, "count": 10000}
         req = twitter_get_user_timeline.twitter.get(twitter_get_user_timeline.url, params = params)
         twitter_get_user_timeline.twitter_method(req, dict_flag=False, dict_value=v)
     # SQLite

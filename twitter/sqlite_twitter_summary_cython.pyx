@@ -11,7 +11,7 @@ import operator
 import os
 
 
-class SqliteTwitterCython(object):
+class SqliteTwitterSummaryCython(object):
     """
     Twitter Save to the SQLite
     """
@@ -21,7 +21,7 @@ class SqliteTwitterCython(object):
         Get the mecab dict by the yaml
         """
         Twitter = namedtuple("Twitter", ["mecab"])
-        config_file = "enviroment.yml"
+        config_file = "enviroment_twitter.yml"
 
         with open(config_file, encoding="utf-8") as cf:
             e = yaml.load(cf)
@@ -52,8 +52,8 @@ class SqliteTwitterCython(object):
         """
         self.cur.execute("""SELECT source_txt, replay_txt FROM ms_rinna;""")
         file_list = os.listdir("./data/")
-        for file in file_list:
-            os.remove("./data/" + file)
+        #for file in file_list:
+        #    os.remove("./data/" + file)
         for source_txt, replay_txt in self.cur.fetchall():
             class_name = self.__judge_class(source_txt, replay_txt)
             print(class_name)

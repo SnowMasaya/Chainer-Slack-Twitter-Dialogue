@@ -21,7 +21,7 @@ class SqliteTwitterSummary(object):
         Get the mecab dict by the yaml
         """
         Twitter = namedtuple("Twitter", ["mecab"])
-        config_file = "enviroment.yml"
+        config_file = "enviroment_twitter.yml"
 
         with open(config_file, encoding="utf-8") as cf:
             e = yaml.load(cf)
@@ -31,9 +31,9 @@ class SqliteTwitterSummary(object):
         conn = sqlite3.connect('./twitter_data.db')
         self.cur = conn.cursor()
         self.class_word_vector = class_word_vector
-        self.class_word_dict = self.__make_class_word_dict()
+        self.class_word_dict = self.make_class_word_dict()
 
-    def __make_class_word_dict(self):
+    def make_class_word_dict(self):
         """
         make remake the data format
         """
@@ -56,7 +56,7 @@ class SqliteTwitterSummary(object):
         for file in file_list:
             os.remove("./data/" + file)
         for source_txt, replay_txt in self.cur.fetchall():
-            class_name = self.__judge_class(source_txt, replay_txt)
+            class_name = self.judge_class(source_txt, replay_txt)
             print(class_name)
             print(source_txt)
             print(replay_txt)
@@ -67,7 +67,7 @@ class SqliteTwitterSummary(object):
             source_file.close()
             replay_file.close()
 
-    def __judge_class(self, source_txt, replay_txt):
+    def judge_class(self, source_txt, replay_txt=""):
         """
         Judge word class
         :param source_txt: twitter source text
@@ -75,11 +75,12 @@ class SqliteTwitterSummary(object):
         :return: most match class
         """
         class_match_rate = {}
-        source_wakati_text = self.__mecab_method(source_txt.strip())
-        replay_wakati_text = self.__mecab_method(replay_txt.strip())
         total_text = []
+        source_wakati_text = self.__mecab_method(source_txt.strip())
         total_text.extend(source_wakati_text)
-        total_text.extend(replay_wakati_text)
+        if replay_txt != "":
+            replay_wakati_text = self.__mecab_method(replay_txt.strip())
+            total_text.extend(replay_wakati_text)
         for class_name in self.class_word_vector.keys():
             word_match_count = self.__match_word_count(total_text, class_name)
             if class_name not in class_match_rate:
