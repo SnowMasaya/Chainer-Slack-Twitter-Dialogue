@@ -79,8 +79,8 @@ class ProducerConsumerThreadSqlTwitter(object):
             else:
                 log_text = "Consume "
                 print(log_text)
-                sqlite_twitter_cython = SqliteTwitterSummaryCython(class_word_vector)
-                sqlite_twitter_cython.call_sql()
+                sqlite_twitter = SqliteTwitterSummaryCython(class_word_vector)
+                sqlite_twitter.call_sql()
                 queue.task_done()
                 # Setting the wait time, I refered to the bellow link
                 #  https://www.w3.org/Protocols/HTTP-NG/http-prob.html

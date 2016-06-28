@@ -37,7 +37,7 @@ class InputFile():
             f = codecs.open(self.__file_name, 'r', 'utf-8')
             file = csv.reader(f, delimiter=input_delimiter)
         for line in file:
-            self.__data.append(line)
+            self.__data.append(line.strip())
         # cloase
         if input_delimiter == "":
             file.close()

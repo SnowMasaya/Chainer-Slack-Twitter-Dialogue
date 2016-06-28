@@ -13,13 +13,14 @@ import sys
 import os
 sys.path.append(os.path.join(os.path.dirname(__file__), "../../"))
 sys.path.append(os.path.join(os.path.dirname(__file__), "../"))
+from twitter.sqlite_twitter_summary import SqliteTwitterSummary
 import pyximport
 pyximport.install()
 from split_data.input_file_cython import InputFileCython
 from os import path
 APP_ROOT = path.dirname(path.abspath(__file__))
 import re
-import operator
+from execute.execute_dialogue_attention import ExecuteAttentionDialogue
 
 
 class SlackApp():
@@ -38,7 +39,7 @@ class SlackApp():
         self.slack_channel = data_model.slack_channel
         self.data = ""
         self.parameter = data_model.parameter_dict
-        self.model_name = "../model/ChainerDialogue"
+        self.model_name = "../model_word_match/ChainerDialogue"
         self.generation_limit = 200
         """
         We confirm channel number
@@ -50,13 +51,15 @@ class SlackApp():
         self.Mecab = MeCab.Tagger("-Owakati -d %s" % self.mecab_dict)
         XP.set_library(False, 0)
         self.XP = XP
-        wn_summary_list = APP_ROOT + '/../Data/wn_total_summary_list.txt'
+        wn_summary_list = APP_ROOT + '/../Data/wn_total_summary_51519_limit05_out_put_list.txt'
         self.input_module = InputFileCython(wn_summary_list)
         self.input_module.input_special_format_file()
         file_list = self.input_module.get_file_data()
         self.class_word_vector = self.__make_class_word_vector(file_list)
-        self.word_class_dict = self.__make_class_word_dict()
+        self.sqlite_twitter_summary = SqliteTwitterSummary(self.class_word_vector)
+        self.word_class_dict = self.sqlite_twitter_summary.make_class_word_dict()
         self.word_class = ""
+        self.multi_train_execute = ExecuteAttentionDialogue()
 
     def __make_class_word_vector(self, file_list):
         """
@@ -66,26 +69,12 @@ class SlackApp():
         """
         class_word_vector = {}
         for file in file_list:
-            self.input_module = InputFileCython(APP_ROOT + "/../Data/wn_summary/" + file.strip())
+            self.input_module = InputFileCython(APP_ROOT + "/../Data/wn_total_summary_51519_limit05_out_put//" + file.strip())
             self.input_module.input_special_format_file()
             if file.strip() not in class_word_vector:
-                word_list = re.sub("\]|\[|\'", "", self.input_module.get_file_data()[0].strip())
-                class_word_vector.update({file.strip().replace(".txt", ""): word_list.split(",")})
+                word_list = (list(map(lambda x:x.strip(), self.input_module.get_file_data())))
+                class_word_vector.update({file.strip().replace("_summary.txt", ""): word_list})
         return class_word_vector
-
-    def __make_class_word_dict(self):
-        """
-        make remake the data format
-        """
-        word_class_dict = {}
-        for class_name, word_list in self.class_word_vector.items():
-            word_dict = {}
-            for word in word_list:
-                if word not in word_dict:
-                    word_dict.update({word: 1})
-            if class_name not in word_class_dict:
-                word_class_dict.update({class_name: word_dict})
-        return word_class_dict
 
     def call_method(self):
         """
@@ -125,34 +114,18 @@ class SlackApp():
                 self.__multi_train()
 
     def __multi_train(self):
-        train_path = APP_ROOT + "/../twitter/data/"
-        file_list = os.listdir(train_path)
-        twitter_source_dict = {}
-        twitter_replay_dict = {}
-        for file in file_list:
-            word_class = re.sub("_replay_twitter_data\.txt|_source_twitter_data\.txt|", file.strip())
-            if word_class not in twitter_source_dict:
-                twitter_source_dict.update({word_class: file.strip})
-            if word_class not in twitter_replay_dict:
-                twitter_replay_dict.update({word_class: file.strip})
-        for word_class in twitter_source_dict.keys():
-            self.parameter["source"] = train_path + twitter_source_dict[word_class]
-            self.parameter["target"] = train_path + twitter_replay_dict[word_class]
-            self.parameter["model"] = "ChainerDialogue_" + word_class
-            model = AttentionDialogue.load_spec(self.parameter["model"] + '.spec', self.XP)
-            dialogue = EncoderDecoderModelAttention(self.parameter)
-            dialogue.model = self.parameter["model"]
-            serializers.load_hdf5(self.parameter["model"] + '.weights', model)
-            dialogue.attention_dialogue = model
-            dialogue.word2vecFlag = False
-            dialogue.train()
+        """
+        Call multi train
+        """
+        self.multi_train_execute.train_mulit_model()
 
     def __input_sentence(self):
         """
         return sentence for chainer predict
         """
         text = self.__mecab_method(self.data[0]["text"].replace("chainer:", ""))
-        self.word_class = self.__judge_class(self.data[0]["text"].replace("chainer:", ""))
+        self.word_class = self.sqlite_twitter_summary.judge_class(self.data[0]["text"].replace("chainer:", ""))
+        ##  self.word_class = self.sqlite_twitter_summary.judge_class_wiki_vector(self.data[0]["text"].replace("chainer:", ""))
         data = [text]
         src_batch = [x + ["</s>"] * (self.generation_limit - len(x) + 1) for x in data]
         return src_batch
@@ -163,12 +136,15 @@ class SlackApp():
         :param src_batch: get the source sentence
         :return:
         """
+        self.model_name = "../model_word_match/ChainerDialogue_" + self.word_class
+        print(self.word_class)
         dialogue = EncoderDecoderModelAttention(self.parameter)
         src_vocab = Vocabulary.load(self.model_name + '.srcvocab')
         trg_vocab = Vocabulary.load(self.model_name + '.trgvocab')
         model = AttentionDialogue.load_spec(self.model_name + '.spec', self.XP)
         serializers.load_hdf5(self.model_name + '.weights', model)
         hyp_batch = dialogue.forward_implement(src_batch, None, src_vocab, trg_vocab, model, False, self.generation_limit)
+        print(hyp_batch)
         return hyp_batch
 
     def __setting_parameter(self):
@@ -188,51 +164,6 @@ class SlackApp():
         """
         mecab_text = self.Mecab.parse(text)
         return mecab_text.split(" ")
-
-    def __judge_class(self, source_txt):
-        """
-        Judge word class
-        :param source_txt(str): twitter source text
-        :return: most match class
-        """
-        class_match_rate = {}
-        total_text = self.__mecab_noum_method(source_txt.strip())
-        for class_name in self.class_word_vector.keys():
-            word_match_count = self.__match_word_count(total_text, class_name)
-            if class_name not in class_match_rate:
-                class_match_rate.update({class_name: 1.0 * word_match_count / len(self.word_class_dict[class_name])})
-        if max(class_match_rate.values()) == 0.0:
-            return "other"
-        else:
-            return max(class_match_rate.items(), key=operator.itemgetter(1))[0]
-
-    def __mecab_noum_method(self, text):
-        """
-        Call Mecab method split process and choose noum
-        :param text:
-        :return: only noum
-        """
-        res = self.Mecab.parseToNode("".join(text))
-        split_nonum = []
-        while res:
-            feature = res.feature.split(",")
-            if feature[0] == u"名詞":
-                split_nonum.append(feature[6])
-            res = res.next
-        return split_nonum
-
-    def __match_word_count(self, total_text, class_name):
-        """
-        count matthing word word class
-        :param total_text: source text and reply text
-        :param class_name: choose class name
-        :return: matthing count
-        """
-        word_match_count = 0
-        for word in total_text:
-            if word in self.word_class_dict[class_name]:
-                word_match_count = word_match_count + 1
-        return word_match_count
 
 if __name__ == '__main__':
     data_model = SlackModel()

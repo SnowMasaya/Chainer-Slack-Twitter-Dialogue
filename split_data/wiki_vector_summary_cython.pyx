@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from scipy import linalg, mat, dot
 import numpy
-import sys
+import copy
 
 
 class WikiVectorSummaryCython():
@@ -27,6 +27,7 @@ class WikiVectorSummaryCython():
         self.word_net_vector = {}
         self.class_average_vector = {}
         self.COSIN_SIMILARITY_LIMIT = 0.6
+        # self.COSIN_SIMILARITY_LIMIT = 0.1
         self.delete_wiki_data = []
         self.average_list = []
 
@@ -36,6 +37,7 @@ class WikiVectorSummaryCython():
         :return:
         """
         watch_count = 0
+        print(len(self.__split_dict))
         for word, self.data_class in self.__all_dict.items():
             watch_count = watch_count + 1
             if watch_count % 100 == 0:
@@ -45,14 +47,12 @@ class WikiVectorSummaryCython():
                 self.__check_wiki_vector(word)
                 print("--------------------------------------------------------------------")
                 print(len(self.__split_dict))
-        self.__make_average_dict()
 
-    def __make_average_dict(self):
-        for self.data_class, word_list in self.__split_dict.items():
-            for word in word_list:
-                if word in self.__wiki_vector:
-                    self.word_net_vector.update({word: self.__wiki_vector[word]})
-            self.__calculate_average_vector(self.data_class)
+    def make_average_dict(self, wiki_vector):
+        self.__wiki_vector = wiki_vector
+        for data_split_class, word_list in self.__split_dict.items():
+            [self.word_net_vector.update({word: self.__wiki_vector[word]}) for word in word_list if word in self.__wiki_vector]
+            self.__calculate_average_vector(data_split_class)
             self.word_net_vector = {}
         self.__add_wiki_word()
 
@@ -64,17 +64,13 @@ class WikiVectorSummaryCython():
         """
         missing_word_list = []
         for self.wiki_word, vector in self.__wiki_vector.items():
-            if self.wiki_word in self.__all_dict:
+            if self.wiki_word in self.__all_dict and word in self.__wiki_vector:
                 cosine_similarity = self.__cosine_similarity(self.__wiki_vector[word], vector)
                 self.__cosine_similarity_judge(cosine_similarity)
             else:
                 missing_word_list.append(self.wiki_word)
         if self.data_class not in self.delete_wiki_data:
             self.missing_word.update({self.data_class: missing_word_list})
-        else:
-            for delete in self.delete_wiki_data:
-                if delete in self.missing_word:
-                    del self.missing_word[delete]
 
     def __cosine_similarity_judge(self, cosine_similarity):
         """
@@ -92,11 +88,18 @@ class WikiVectorSummaryCython():
         :return:
         """
         wiki_data_class = self.__all_dict[self.wiki_word]
+        all_dict = copy.copy(self.__all_dict)
+        wiki_vector = copy.copy(self.__wiki_vector)
         # add word list wiki word class
         if wiki_data_class != self.data_class and wiki_data_class in self.__split_dict:
             [self.__split_dict[self.data_class].append(word) for word in self.__split_dict[wiki_data_class] if word not in self.__split_dict[self.data_class]]
             del self.__split_dict[wiki_data_class]
-            self.delete_wiki_data.append(wiki_data_class)
+            [all_dict.pop(word) for word in self.__split_dict[self.data_class] if word in self.__all_dict]
+            self.__all_dict = copy.copy(all_dict)
+            [wiki_vector.pop(word) for word in self.__split_dict[self.data_class] if word in self.__wiki_vector]
+            self.__wiki_vector = copy.copy(wiki_vector)
+            if wiki_data_class in self.missing_word:
+                del self.missing_word[wiki_data_class]
 
     def __cosine_similarity(self, vector1, vector2):
         """

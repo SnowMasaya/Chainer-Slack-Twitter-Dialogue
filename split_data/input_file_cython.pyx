@@ -37,12 +37,23 @@ class InputFileCython():
             f = codecs.open(self.__file_name, 'r', 'utf-8')
             file = csv.reader(f, delimiter=input_delimiter)
         for line in file:
-            self.__data.append(line)
+            self.__data.append(line.strip())
         # cloase
         if input_delimiter == "":
             file.close()
         else:
             f.close()
+
+    def input_file_str_list(self):
+        """
+        Example
+           file data
+              [ 0.0, 1.0, ....
+              ]
+        """
+        with open(self.__file_name, encoding='utf-8', errors='ignore') as fo:
+            for line in fo:
+                self.__data = list(map(float, line.replace("[", "").replace("]", "").strip().split(",")))
 
     def input_fast_large_file(self):
         with open(self.__file_name, encoding='utf-8', errors='ignore') as FileObj:

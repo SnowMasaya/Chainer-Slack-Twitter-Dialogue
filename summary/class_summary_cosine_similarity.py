@@ -3,7 +3,8 @@
 import copy
 import sys
 
-class ClassSummaryCosineSimilarity():
+
+class ClassCosineSimilarity():
     """Class Summary class.
 
     This class is the summary class because a lot word class(71920 class)

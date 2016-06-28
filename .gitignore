@@ -46,6 +46,8 @@ Py-StackExchange
 jawiki-latest-all-titles-in-ns0*
 data
 data/*
+data_bk
+data_bk/*
 word2vec.model*
 test.txt
 requests-oauthlib
@@ -60,3 +62,9 @@ source_twitter_data.txt
 replay_twitter_data.txt
 cron/*
 ChainerDialogue*
+model_word_match/
+model_word_match/*
+Data/*
+Data
+data_word_match
+data_word_match/*
