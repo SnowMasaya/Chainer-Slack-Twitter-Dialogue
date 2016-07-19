@@ -2,19 +2,11 @@
 #          FROM BASE COMMON BECAUSE COMMONLY BASE IMAGES
 #################################################################################################################
 FROM ubuntu:14.04
-#Install basic packages
-RUN yum -y install wget which nano
-#Install Java
-RUN yum -y install java-1.7.0-openjdk-devel.x86_64
-#seting environtment
-ENV JAVA_HOME /usr/lib/jvm/java-1.7.0-openjdk.x86_64
-ENV PATH $JAVA_HOME/bin:$PATH
 ENV PYTHON_VERSION 3.5.0
 ENV PYENV_ROOT /usr/local/pyenv
 #################################################################################################################
-#          Crawler total Initial setting
+#          Dialogue Initial setting
 #################################################################################################################
-ENV z_shell /bin/zsh
 #Docker Setting
 ENV docker_user_name docker_user
 ENV docker_password docker_pass
@@ -22,53 +14,15 @@ ENV docker_home /home/docker_user
 ENV user_group admin
 
 env LANG=ja_JP.UTF-8
+RUN useradd -b ${docker_home} -p ${docker_password} -d ${docker_home} ${docker_user_name}
 #################################################################################################################
-# REference
-#    http://qiita.com/nakamura-tsuyoshi/items/993a4f87bcef2be59db5#%E3%83%87%E3%83%BC%E3%82%BF%E3%82%92%E6%B5%81%E3%81%97%E8%BE%BC%E3%82%93%E3%81%A7%E3%81%BF%E3%82%8B
+#           Common Install
 #################################################################################################################
-# grab gosu for easy step-down from root
-#################################################################################################################
-ENV GOSU_URL https://github.com/tianon/gosu/releases/download/1.7/gosu-amd64
-RUN gpg --keyserver pgp.mit.edu --recv-keys \
-    B42F6819007F00F88E364FD4036A9C25BF357DD4 \
-    && curl -sSL $GOSU_URL -o /bin/gosu \
-    && chmod +x /bin/gosu \
-    && curl -sSL $GOSU_URL.asc -o /tmp/gosu.asc \
-    && gpg --verify /tmp/gosu.asc /bin/gosu \
-    && rm /tmp/gosu.asc
-#################################################################################################################
-# https://www.elastic.co/guide/en/elasticsearch/reference/current/setup-repositories.html
-# https://packages.elasticsearch.org/GPG-KEY-elasticsearch
-#################################################################################################################
-# Elastic Search Versions 2.3.3-1
-
-RUN set -x \
-	&& yum -y update
-RUN rpm --import https://packages.elastic.co/GPG-KEY-elasticsearch
-ADD conf/elasticsearch.repo /etc/yum.repos.d/
-RUN yum install -y elasticsearch
-
-ENV PATH /usr/share/elasticsearch/bin:$PATH
-
-WORKDIR /usr/share/elasticsearch
-
-RUN set -ex \
-	&& for path in \
-		./data \
-		./logs \
-		./config \
-		./config/scripts \
-	; do \
-		mkdir -p "$path"; \
-		chown -R ${docker_user_name}:${user_group} "$path"; \
-	done
-
-VOLUME /usr/share/elasticsearch/data
-
-COPY shell/docker-entrypoint.sh ./
-
-RUN chmod 777 /usr/share/elasticsearch/docker-entrypoint.sh && \
-    yum -y update && yum install -y git gcc g++ vim
+RUN apt-get -y update
+RUN apt-get -y upgrade
+RUN apt-get install -y curl git wget gcc Cython make sudo openssl\
+                       llvm module-init-tools python-pip patch \
+                       build-essential gfortran e2fslibs-dev dstat sysstat libssl1.0.0
 #################################################################################################################
 #           Python Setting
 #################################################################################################################
@@ -92,79 +46,10 @@ RUN echo 'Defaults env_keep += /usr/local/pyenv' > /etc/sudoers && \
     chown -R :pyenv /usr/local/venv/$PYTHON_VERSION && \
     echo 'export PATH="/usr/local/venv/3.5.0/bin:$PATH"' > /root/.zshrc && \
     echo 'export PATH="/usr/local/venv/3.5.0/bin:$PATH"' > ${docker_home}/.zshrc && \
-    yum install -y atlas-devel lapack-devel blas-devel gcc-gfortran && \
     /usr/local/venv/3.5.0/bin/pip install numpy==1.11.0 && \
     /usr/local/venv/3.5.0/bin/pip install --upgrade gensim==0.12.4 && \
     ln -s /usr/lib64/atlas/libsatlas.so /usr/lib64/atlas/libcblas.so && \
-    /usr/local/venv/3.5.0/bin/pip install scikit-learn==0.17.1
 #################################################################################################################
-#			Setting the Japanese tool for Elastic Search				#
-# install kuromoji 2.2.1
-# neologd Warning I confirm working only the version 2.3.0, other older version is not working
-# install analysis-icu 2.3.3 for normalize
-# install lmenezes/elasticsearch-kopf for visulaize the elastic search
-# install mobz/elasticsearch-head web front end for browsing and interacting with an Elastic Search cluster
-# install karmi/elasticsearch-paramedic  monitor and inspect ElasticSearch clusters.
+#           final Setting
 #################################################################################################################
-RUN yum install -y vim sudo nkf file && \
-    /usr/share/elasticsearch/bin/plugin install analysis-kuromoji && \
-    /usr/share/elasticsearch/bin/plugin install org.codelibs/elasticsearch-analysis-kuromoji-neologd/2.3.0 && \
-    /usr/share/elasticsearch/bin/plugin install analysis-icu && \
-    /usr/share/elasticsearch/bin/plugin install lmenezes/elasticsearch-kopf && \
-    /usr/share/elasticsearch/bin/plugin install mobz/elasticsearch-head && \
-    /usr/share/elasticsearch/bin/plugin install karmi/elasticsearch-paramedic
-#################################################################################################################
-#        Setting the kibana for Elastic Search           #
-#################################################################################################################
-ENV KIBANA_VERSION 4.3.1
-
-RUN wget -nv https://download.elastic.co/kibana/kibana/kibana-${KIBANA_VERSION}-linux-x64.tar.gz && \
-    tar zxf kibana-${KIBANA_VERSION}-linux-x64.tar.gz && \
-    rm -f kibana-${KIBANA_VERSION}-linux-x64.tar.gz && \
-    mv kibana-${KIBANA_VERSION}-linux-x64 ${docker_home}/kibana && \
-    chmod -R 777 ${docker_home}/kibana
-#################################################################################################################
-#			COPY Setting Shell in the Docker enviroment			#
-#		    Directory layout
-#		        https://www.elastic.co/guide/en/elasticsearch/reference/current/setup-dir-layout.html
-#################################################################################################################
-COPY conf ./config
-COPY conf/elasticsearch.yml /etc/elasticsearch/
-COPY template/dict/userdict_ja.txt /usr/share/elasticsearch/dict/
-COPY template/dict/stopword.txt /usr/share/elasticsearch/dict/
-COPY template/dict/synonym.txt /usr/share/elasticsearch/dict/
-COPY template/elastic_index_template.json /usr/share/elasticsearch/config/
-COPY data/04510.jp.txt_with_text.json /usr/share/elasticsearch/data
-COPY data/45to.jp.txt_with_text.json /usr/share/elasticsearch/data
-COPY data/516745.com.txt_with_text.json /usr/share/elasticsearch/data
-COPY data/516745.com.txt_with_text.json.1 /usr/share/elasticsearch/data
-COPY data/516745.com.txt_with_text.json.2 /usr/share/elasticsearch/data
-COPY data/agent-neo.com.txt_with_text.json /usr/share/elasticsearch/data
-COPY data/agent.m3.com.txt_with_text.json /usr/share/elasticsearch/data
-COPY data/aichifukushi-job.net.txt_with_text.json /usr/share/elasticsearch/data
-COPY data/arubaito-ex.jp.txt_with_text.json /usr/share/elasticsearch/data
-COPY data/at-agent.jp.txt_with_text.json /usr/share/elasticsearch/data
-RUN mkdir -p /usr/share/elasticsearch/shell
-EXPOSE 9200 9300 5601
-RUN mkdir -p /usr/share/elasticsearch/work && chmod 777 /usr/share/elasticsearch/work
-WORKDIR /usr/share/elasticsearch/work
-RUN /bin/zsh -c  "source /home/docker_user/.zshrc" && \
-    echo "docker_user  ALL=(ALL)       ALL" >> /etc/sudoers && \
-    yum clean all && yum swap -y fakesystemd systemd && \
-    curl -o /usr/local/bin/jq http://stedolan.github.io/jq/download/linux64/jq && chmod +x /usr/local/bin/jq && \
-    /usr/local/venv/3.5.0/bin/pip install elasticsearch==2.3.0 && \
-    yum install -y expect
-ADD date.txt /
-COPY elastic-search-python /usr/share/elasticsearch/elastic-search-python
-RUN  chmod 777 /usr/share/elasticsearch/elastic-search-python/data
-RUN  chmod 777 /usr/share/elasticsearch/logs
-RUN  chmod 777 /usr/share/elasticsearch/data
-RUN  chmod -R 777 /etc/elasticsearch
-COPY shell/elastic_search_setting.sh /usr/share/elasticsearch/shell
-COPY shell/elastic_regist_search.sh /usr/share/elasticsearch/shell
-COPY shell/elastic_regist_check.sh /usr/share/elasticsearch/shell
-COPY shell/elastic_regist_bulk.sh /usr/share/elasticsearch/shell
-COPY shell/elastic_regist_search_host.sh /usr/share/elasticsearch/shell
-COPY shell/elastic_search_kibana.sh /usr/share/elasticsearch/shell
 USER ${docker_user_name}
-CMD elasticsearch -Des.logger.level=OFF -Des.security.manager.enabled=false & /home/docker_user/kibana/bin/kibana -q

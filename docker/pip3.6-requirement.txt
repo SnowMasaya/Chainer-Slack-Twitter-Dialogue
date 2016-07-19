@@ -12,7 +12,6 @@ six==1.10.0
 tornado==4.2.1
 urllib3==1.12
 Werkzeug==0.10.4
-#numpy==1.10.4
 readability-lxml==0.6.1
 scipy==0.17.0
 scikit-learn==0.17.1

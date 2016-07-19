@@ -9,7 +9,7 @@ sha1=$(shell echo $(1) | sha1sum | cut -d ' ' -f 1)
 # targets will be created for each. A global pull, import, and export
 # task will be created to operate on the list.
 # NOTE: relevant changes should be synced to fig.yml
-DOCKER_IMAGES:=centos:7
+DOCKER_IMAGES:=ubuntu:14.04
 
 # Template defining tasks to pull, export, and import an image. This
 # These tasks use work arounds to ensure tasks around the dependent
@@ -60,7 +60,7 @@ import: $(IMPORT_DOCKER_IMAGES)
 
 # TODO: set this to your poject name. Use _ instead of -. This
 # variable is used to namespace fig and for pushing images.
-REPO_NAME=docker_common
+REPO_NAME=docker_dialogue
 DOCKER_COMPOSE=docker-compose
 TAG=$(shell echo $$CIRCLE_SHA1 | cut -c 1-7)
 
@@ -71,8 +71,7 @@ TAG=$(shell echo $$CIRCLE_SHA1 | cut -c 1-7)
 # Define linked containers (these name should match keys in
 # fig.ml). The test & test-ci targets wil be run with all links set
 # correctly.
-DOCKER_RUN_ELASTIC_SEARCH:=docker run --privileged -v /sys/fs/cgroup:/sys/fs/cgroup:ro -i -t $(REPO_NAME)/elasticsearch /bin/sh -c ". /usr/share/elasticsearch/.bash_profile && bash"
-DOCKER_RUN_ELASTIC_SEARCH_CENTOS:=docker run -i -t $(REPO_NAME)/elasticsearch_centos zsh
+DOCKER_RUN_DIALOGUE:=docker run -i -t $(REPO_NAME)/dialogue bash
 
 # Wildcard rule to build an image from a file inside dockerfiles/
 # Use the tasks like any other dependency. Order may be controller
@@ -87,7 +86,7 @@ images/% : dockerfiles/% pull
 environment: pull docker-compose.yml
 	$(DOCKER_COMPOSE) up -d
 
-build: images/common
+build: images/dialogue
 
 test:
 	$(DOCKER_RUN)
@@ -95,11 +94,8 @@ test:
 # NOTE: Cannot use --rm on Circle CI, hence the seemingly
 # duplicate task.
 
-test-elastic-search: images/elasticsearch
-	$(DOCKER_RUN_ELASTIC_SEARCH)
-
-test-elastic-search-centos: images/elasticsearch_centos
-	$(DOCKER_RUN_ELASTIC_SEARCH_CENTOS)
+test-dialogue: images/dialogue
+	$(DOCKER_RUN_DIALOGUE)
 
 teardown:
 	$(DOCKER_COMPOSE) stop
