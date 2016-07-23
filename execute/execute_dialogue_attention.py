@@ -115,11 +115,11 @@ class ExecuteAttentionDialogue(object):
         twitter_source_dict = {}
         twitter_replay_dict = {}
         for file in file_list:
-            word_class = re.sub("_replay_twitter_data\.txt|_source_twitter_data\.txt|", file.strip())
+            word_class = re.sub("_replay_twitter_data\.txt|_source_twitter_data\.txt", "", file.strip())
             if word_class not in twitter_source_dict:
-                twitter_source_dict.update({word_class: file.strip})
+                twitter_source_dict.update({word_class: file.strip()})
             if word_class not in twitter_replay_dict:
-                twitter_replay_dict.update({word_class: file.strip})
+                twitter_replay_dict.update({word_class: file.strip()})
         for word_class in twitter_source_dict.keys():
             self.parameter_dict["source"] = train_path + twitter_source_dict[word_class]
             self.parameter_dict["target"] = train_path + twitter_replay_dict[word_class]
