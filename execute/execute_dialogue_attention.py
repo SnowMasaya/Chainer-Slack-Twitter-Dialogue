@@ -121,8 +121,10 @@ class ExecuteAttentionDialogue(object):
             if word_class not in twitter_replay_dict:
                 twitter_replay_dict.update({word_class: file.strip()})
         for word_class in twitter_source_dict.keys():
-            self.parameter_dict["source"] = train_path + twitter_source_dict[word_class]
-            self.parameter_dict["target"] = train_path + twitter_replay_dict[word_class]
+            self.parameter_dict["source"] = train_path + word_class + "_source_twitter_data.txt"
+            print(self.parameter_dict["source"])
+            self.parameter_dict["target"] = train_path + word_class + "_replay_twitter_data.txt"
+            print(self.parameter_dict["target"])
             self.parameter_dict["model"] = "ChainerDialogue_" + word_class
             encoderDecoderModel = EncoderDecoderModelAttention(self.parameter_dict)
             encoderDecoderModel.train()
