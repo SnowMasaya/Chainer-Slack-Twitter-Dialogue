@@ -160,6 +160,18 @@ class EncoderDecoderModel:
         trace('finished.')
 
     def print_out(self, K, i_epoch, trained, src_batch, trg_batch, hyp_batch):
+        """
+        Print out
+        :param K(int): setting the random number()
+        :param i_epoch(int): epoch times
+        :param trained: train times
+        :param src_batch: source data
+        :param trg_batch: target data
+        :param hyp_batch: hypothesis data
+        :return:
+        """
+        if K > len(src_batch) and K > len(trg_batch) and K > len(hyp_batch):
+            K = len(src_batch) - 1
 
         trace('epoch %3d/%3d, sample %8d' % (i_epoch + 1, self.epoch, trained + K + 1))
         trace('  src = ' + ' '.join([x if x != '</s>' else '*' for x in src_batch[K]]))
