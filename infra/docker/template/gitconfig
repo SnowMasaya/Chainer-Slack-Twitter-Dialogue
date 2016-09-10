@@ -1,0 +1,13 @@
+[alias]
+	lg = log --graph --pretty=oneline --decorate --date=short --abbrev-commit --branches
+  lgTime = log --graph --all --color --pretty='%x09%h %cn%x09%C(yellow)(%cr)%Creset%x09%s %Cred%d%Creset'
+  amend = commit --amend -C HEAD
+
+[mergetool.ediff]
+	cmd = emacs --eval \" (progn (defun ediff-write-merge-buffer () (let ((file ediff-merge-store-file)) (set-buffer ediff-buffer-C) (write-region (point-min) (point-max) file) (message \\\"Merge buffer saved in: %s\\\" file) (set-buffer-modified-p nil) (sit-for 1))) (setq ediff-quit-hook 'kill-emacs ediff-quit-merge-hook 'ediff-write-merge-buffer) (ediff-merge-files-with-ancestor \\\"$LOCAL\\\" \\\"$REMOTE\\\" \\\"$BASE\\\" nil \\\"$MERGED\\\"))\" 
+
+[merge]
+	tool = ediff
+	
+[push]
+	default = current

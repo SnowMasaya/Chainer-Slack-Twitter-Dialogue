@@ -1,0 +1,102 @@
+#################################################################################################################
+#          FROM BASE COMMON BECAUSE COMMONLY BASE IMAGES
+#################################################################################################################
+FROM ubuntu:14.04
+ENV PYTHON_VERSION 3.5.0
+ENV PYENV_ROOT /usr/local/pyenv
+#################################################################################################################
+#          Dialogue Initial setting
+#################################################################################################################
+#Docker Setting
+ENV docker_user_name docker_user
+ENV docker_password docker_pass
+ENV docker_home /home/docker_user
+ENV user_group admin
+
+RUN useradd -b ${docker_home} -p ${docker_password} -d ${docker_home} ${docker_user_name} && \
+    mkdir ${docker_home}
+#################################################################################################################
+#           Common Install
+#################################################################################################################
+RUN apt-get -y update
+RUN apt-get -y upgrade
+RUN apt-get install -y curl git wget gcc Cython make sudo openssl bzip2 libssl-dev \
+                       llvm module-init-tools python-pip patch \
+                       build-essential gfortran e2fslibs-dev dstat sysstat libssl1.0.0 \
+                       gfortran libopenblas-dev liblapack-dev libblas-dev \
+                       libreadline6 libreadline6-dev \
+                       sqlite3 libsqlite3-dev \
+                       mecab libmecab-dev mecab-ipadic-utf8 xz-utils file \
+                       libhdf5-dev
+#################################################################################################################
+#           Python Setting
+#################################################################################################################
+ADD shell/python/setting.sh /home/
+RUN echo "docker_user  ALL=(ALL)       ALL" >> /etc/sudoers && \
+    sh /home/setting.sh && \
+    groupadd pyenv && \
+    chown -R :pyenv ${PYENV_ROOT} && \
+    chmod -R g+w ${PYENV_ROOT} && \
+    chmod g+s ${PYENV_ROOT} && \
+    gpasswd -a ${docker_user_name} pyenv
+ADD template/python/pyenv.sh /etc/profile.d/
+RUN echo 'Defaults env_keep += /usr/local/pyenv' > /etc/sudoers && \
+    bash -lc '/usr/local/pyenv/bin/pyenv install -s -v ${PYTHON_VERSION}' && \
+    bash -lc '/usr/local/pyenv/bin/pyenv rehash' && \
+    echo ${PYTHON_VERSION} > ~/.python-version && \
+    sh /etc/profile.d/pyenv.sh && \
+    /usr/local/pyenv/bin/pyenv global $PYTHON_VERSION && \
+    /usr/local/pyenv/shims/python -m venv /usr/local/venv/$PYTHON_VERSION && \
+    chmod -R g+w /usr/local/venv/$PYTHON_VERSION && \
+    chown -R :pyenv /usr/local/venv/$PYTHON_VERSION && \
+    echo 'export PATH="/usr/local/venv/3.5.0/bin:$PATH"' > /root/.bashrc && \
+    echo 'export PATH="/usr/local/venv/3.5.0/bin:$PATH"' > ${docker_home}/.bashrc
+#################################################################################################
+#         Setting up Mecab
+#################################################################################################
+ADD mecab-0.996 /home/initial_tag_user/mecab-0.996
+RUN cd /home/initial_tag_user/mecab-0.996/ && \
+    ./configure && \
+    make && make check && make install && cd .. && \
+    echo /usr/local/lib >> /etc/ld.so.conf && ldconfig
+#Mecab ipdic install
+ADD mecab-ipadic-2.7.0-20070801 /home/initial_tag_user/mecab-ipadic-2.7.0-20070801
+RUN cd /home/initial_tag_user/mecab-ipadic-2.7.0-20070801/ && \
+    ./configure --with-charset=utf8 && \
+    make && make install && cd ../
+#################################################################################################
+#         Setting up Python Library
+#################################################################################################
+RUN  /usr/local/venv/3.5.0/bin/pip install numpy==1.11.0
+ADD  pip3.6-requirement.txt ${docker_home}
+RUN  /usr/local/venv/3.5.0/bin/pip install -r ${docker_home}/pip3.6-requirement.txt
+
+#################################################################################################
+#         Install Mecab Nelogd
+#################################################################################################
+RUN echo "root ALL=(ALL) ALL" >> /etc/sudoers
+RUN git clone --depth 1 https://github.com/neologd/mecab-ipadic-neologd.git
+# If you install latest version you remove bellow comment out
+RUN cd mecab-ipadic-neologd && \
+   ./bin/install-mecab-ipadic-neologd -n -y
+#RUN rpm -ivh http://packages.groonga.org/centos/groonga-release-1.1.0-1.noarch.rpm && \
+#    yum install -y mecab mecab-devel mecab-ipadic && \
+#    curl -L https://goo.gl/int4Th | sh
+RUN echo /usr/local/lib >> /etc/ld.so.conf && \
+    ldconfig
+#################################################################################################################
+#           final Setting
+#################################################################################################################
+RUN git clone https://github.com/SnowMasaya/Chainer-Slack-Twitter-Dialogue.git /home/docker_user/Chainer-Slack-Twitter-Dialogue && \
+    mkdir ${docker_home}/Chainer-Slack-Twitter-Dialogue/Data
+ADD data \
+    ${docker_home}/Chainer-Slack-Twitter-Dialogue/Data/
+ADD data/twitter_data \
+    ${docker_home}/Chainer-Slack-Twitter-Dialogue/twitter/data
+ADD model_word_match \
+    ${docker_home}/Chainer-Slack-Twitter-Dialogue/model_word_match
+RUN chmod -R 777 ${docker_home}
+RUN localedef -v -c -i ja_JP -f UTF-8 ja_JP.UTF-8; echo "";
+env LANG=ja_JP.UTF-8
+USER ${docker_user_name}
+WORKDIR ${docker_home}/Chainer-Slack-Twitter-Dialogue
