@@ -68,3 +68,10 @@ Data/*
 Data
 data_word_match
 data_word_match/*
+#Mecab
+mecab-0.996
+mecab-0.996/*
+mecab-ipadic-2.7.0-20070801
+mecab-ipadic-2.7.0-20070801/*
+.vagrant/*
+.vagrant
