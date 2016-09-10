@@ -43,7 +43,7 @@ class SqliteTwitterSummary(object):
         self.class_word_vector = class_word_vector
         self.class_average_vector = {}
         self.class_word_dict = self.make_class_word_dict()
-        self.__initial_setting_vector()
+        #self.__initial_setting_vector()
 
     def __initial_setting_vector(self):
         # Wiki vector dict
@@ -90,8 +90,8 @@ class SqliteTwitterSummary(object):
         #for file in file_list:
         #    os.remove("./data/" + file)
         for source_txt, replay_txt in self.cur.fetchall():
-            # class_name = self.judge_class(source_txt, replay_txt)
-            class_name = self.judge_class_wiki_vector(source_txt, replay_txt)
+            class_name = self.judge_class(source_txt, replay_txt)
+            # class_name = self.judge_class_wiki_vector(source_txt, replay_txt)
             print(class_name)
             print(source_txt)
             print(replay_txt)

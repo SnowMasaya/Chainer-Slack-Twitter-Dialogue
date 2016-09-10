@@ -75,3 +75,4 @@ mecab-ipadic-2.7.0-20070801
 mecab-ipadic-2.7.0-20070801/*
 .vagrant/*
 .vagrant
+*.retry
