@@ -86,7 +86,7 @@ class SqliteTwitterSummary(object):
         call SQlite and save the twitter in the SQLite
         """
         self.cur.execute("""SELECT source_txt, replay_txt FROM ms_rinna;""")
-        file_list = os.listdir("./data/")
+        file_list = os.listdir("./data_latest/")
         #for file in file_list:
         #    os.remove("./data/" + file)
         for source_txt, replay_txt in self.cur.fetchall():
@@ -95,8 +95,8 @@ class SqliteTwitterSummary(object):
             print(class_name)
             print(source_txt)
             print(replay_txt)
-            source_file = open("./data/" + class_name + '_source_twitter_data.txt', 'a')
-            replay_file = open("./data/" + class_name + '_replay_twitter_data.txt', 'a')
+            source_file = open("./data_latest/" + class_name + '_source_twitter_data.txt', 'a')
+            replay_file = open("./data_latest/" + class_name + '_replay_twitter_data.txt', 'a')
             replay_file.write(self.tagger.parse(source_txt).replace("\n", "") + '\n')
             source_file.write(self.tagger.parse(replay_txt).replace('\n', '') + '\n')
             source_file.close()

@@ -87,6 +87,8 @@ RUN echo /usr/local/lib >> /etc/ld.so.conf && \
 #################################################################################################################
 #           final Setting
 #################################################################################################################
+ADD date.txt \
+    /var/tmp
 RUN git clone https://github.com/SnowMasaya/Chainer-Slack-Twitter-Dialogue.git /home/docker_user/Chainer-Slack-Twitter-Dialogue && \
     mkdir ${docker_home}/Chainer-Slack-Twitter-Dialogue/Data
 ADD data \

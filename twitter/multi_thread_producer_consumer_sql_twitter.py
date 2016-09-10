@@ -19,7 +19,8 @@ Reference:
     http://ja.pymotw.com/2/Queue/
 """
 SEED_DOMAIN_LIST_SIZE = 300
-queue = queue.Queue(SEED_DOMAIN_LIST_SIZE)
+class_queue = queue.Queue(SEED_DOMAIN_LIST_SIZE)
+check_queue = queue.Queue(SEED_DOMAIN_LIST_SIZE)
 
 
 class ProducerConsumerThreadSqlTwitter(object):
@@ -53,27 +54,30 @@ class ProducerConsumerThreadSqlTwitter(object):
             if file.strip() not in class_word_vector:
                 word_list = (list(map(lambda x:x.strip(), self.get_file_data(APP_ROOT + "/../Data/wn_total_summary_51519_limit05_out_put/" + file.strip()))))
                 class_word_vector.update({file.strip().replace("_summary.txt", ""): word_list})
-        global queue
+        global class_queue
+        global check_queue
         while True:
-            try:
-                queue.put(class_word_vector)
-            except queue.Empty:
-                print("Queue Full")
-                pass
-            else:
-                log_text = "Produced "
-                print(log_text)
-                time.sleep(random.uniform(0.0, 0.5))
+            if class_queue not in check_queue.queue:
+                try:
+                    class_queue.put(class_word_vector)
+                    check_queue.put(class_word_vector)
+                except queue.Empty:
+                    print("Queue Full")
+                    pass
+                else:
+                    log_text = "Produced "
+                    print(log_text)
+                    time.sleep(random.uniform(0.0, 0.5))
 
     def consumer_run(self):
         """
         Running Consumer
         """
-        global queue
+        global class_queue
         while True:
             try:
-                class_word_vector = queue.get()
-            except queue.Empty:
+                class_word_vector = class_queue.get()
+            except class_queue.Empty:
                 print("Queue Empty")
                 pass
             else:
@@ -81,7 +85,7 @@ class ProducerConsumerThreadSqlTwitter(object):
                 print(log_text)
                 sqlite_twitter = SqliteTwitterSummaryCython(class_word_vector)
                 sqlite_twitter.call_sql()
-                queue.task_done()
+                class_queue.task_done()
                 # Setting the wait time, I refered to the bellow link
                 #  https://www.w3.org/Protocols/HTTP-NG/http-prob.html
                 time.sleep(random.uniform(0.601, 0.602))
