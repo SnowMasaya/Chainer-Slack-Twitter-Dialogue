@@ -66,12 +66,13 @@ TAG=$(shell echo $$CIRCLE_SHA1 | cut -c 1-7)
 
 .DEFAULT_GOAL:= build
 
-.PHONY: pull export import environment test test-ci test-crawler test-crawler-total test-elastic-search test-page teardown
+.PHONY: pull export import environment test test-dialogue test-elasticsearch teardown
 
 # Define linked containers (these name should match keys in
 # fig.ml). The test & test-ci targets wil be run with all links set
 # correctly.
 DOCKER_RUN_DIALOGUE:=docker run -i -t $(REPO_NAME)/dialogue bash
+DOCKER_RUN_ELASTICSEARCH:=docker run -i -t $(REPO_NAME)/elasticsearch bash
 
 # Wildcard rule to build an image from a file inside dockerfiles/
 # Use the tasks like any other dependency. Order may be controller
@@ -96,6 +97,9 @@ test:
 
 test-dialogue: images/dialogue
 	$(DOCKER_RUN_DIALOGUE)
+
+test-elasticsearch: images/elasticsearch
+	$(DOCKER_RUN_ELASTICSEARCH)
 
 teardown:
 	$(DOCKER_COMPOSE) stop

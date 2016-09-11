@@ -1,0 +1,119 @@
+FROM java:8-jre
+#################################################################################################################
+# REference
+#    http://qiita.com/nakamura-tsuyoshi/items/993a4f87bcef2be59db5#%E3%83%87%E3%83%BC%E3%82%BF%E3%82%92%E6%B5%81%E3%81%97%E8%BE%BC%E3%82%93%E3%81%A7%E3%81%BF%E3%82%8B
+#################################################################################################################
+# grab gosu for easy step-down from root
+#################################################################################################################
+ENV GOSU_VERSION 1.7
+RUN set -x \
+	&& wget -O /usr/local/bin/gosu "https://github.com/tianon/gosu/releases/download/$GOSU_VERSION/gosu-$(dpkg --print-architecture)" \
+	&& wget -O /usr/local/bin/gosu.asc "https://github.com/tianon/gosu/releases/download/$GOSU_VERSION/gosu-$(dpkg --print-architecture).asc" \
+	&& export GNUPGHOME="$(mktemp -d)" \
+	&& gpg --keyserver ha.pool.sks-keyservers.net --recv-keys B42F6819007F00F88E364FD4036A9C25BF357DD4 \
+	&& gpg --batch --verify /usr/local/bin/gosu.asc /usr/local/bin/gosu \
+	&& rm -r "$GNUPGHOME" /usr/local/bin/gosu.asc \
+	&& chmod +x /usr/local/bin/gosu \
+	&& gosu nobody true
+
+#################################################################################################################
+# https://www.elastic.co/guide/en/elasticsearch/reference/current/setup-repositories.html
+# https://packages.elasticsearch.org/GPG-KEY-elasticsearch
+#################################################################################################################
+RUN apt-key adv --keyserver ha.pool.sks-keyservers.net --recv-keys 46095ACC8548582C1A2699A9D27D666CD88E42B4
+
+ENV ELASTICSEARCH_MAJOR 2.3
+ENV ELASTICSEARCH_VERSION 2.3.5
+ENV ELASTICSEARCH_REPO_BASE http://packages.elasticsearch.org/elasticsearch/2.x/debian
+
+RUN echo "deb $ELASTICSEARCH_REPO_BASE stable main" > /etc/apt/sources.list.d/elasticsearch.list
+
+RUN set -x \
+	&& apt-get update \
+	&& apt-get install -y --no-install-recommends elasticsearch=$ELASTICSEARCH_VERSION \
+	&& rm -rf /var/lib/apt/lists/*
+
+ENV PATH /usr/share/elasticsearch/bin:$PATH
+
+WORKDIR /usr/share/elasticsearch
+
+RUN set -ex \
+	&& for path in \
+		./data \
+		./logs \
+		./config \
+		./config/scripts \
+	; do \
+		mkdir -p "$path"; \
+		chown -R elasticsearch:elasticsearch "$path"; \
+	done
+
+
+VOLUME /usr/share/elasticsearch/data
+
+COPY shell/docker-entrypoint.sh ./
+
+RUN chmod 777 /usr/share/elasticsearch/docker-entrypoint.sh
+RUN /usr/share/elasticsearch/bin/plugin install mobz/elasticsearch-head
+RUN apt-get update && apt-get install -y git gcc g++ vim
+RUN apt-get install -y make libssl-dev
+# Off the beep sound
+RUN echo set bell-style none >> /root/.inputrc
+#################################################################################################################
+#			Setting the Japanese tool for Elastic Search				#
+#################################################################################################################
+RUN apt-get install vim sudo nkf file
+# install kuromoji 2.2.1
+RUN /usr/share/elasticsearch/bin/plugin install analysis-kuromoji
+# Warning I confirm working only the version 2.3.0, other older version is not working
+RUN /usr/share/elasticsearch/bin/plugin install org.codelibs/elasticsearch-analysis-kuromoji-neologd/2.3.0
+# install analysis-icu 2.2.1 for normalize
+RUN /usr/share/elasticsearch/bin/plugin install analysis-icu
+# install lmenezes/elasticsearch-kopf for visulaize the elastic search
+RUN /usr/share/elasticsearch/bin/plugin install lmenezes/elasticsearch-kopf
+#################################################################################################################
+#			Setting Neologd	For Elastic Search			#
+#################################################################################################################
+RUN  git clone --depth 1 https://github.com/neologd/neologd-solr-elasticsearch-synonyms.git && \
+     cd neologd-solr-elasticsearch-synonyms && \
+     ./bin/install-neologd-solr-elasticsearch-synonyms -n
+RUN apt-get install -y mecab libmecab-dev mecab-ipadic-utf8 curl xz-utils
+RUN git clone --depth 1 https://github.com/neologd/mecab-ipadic-neologd.git
+RUN cd mecab-ipadic-neologd && \
+    ./bin/install-mecab-ipadic-neologd -y
+# setting dict /usr/lib/mecab/dic/mecab-ipadic-neologd
+ENV elasticsearch_user_name elasticsearch
+ENV elasticsearch_password e_pass
+ENV elasticsearch_home /usr/share/elasticsearch
+RUN echo ${elasticsearch_user_name}:${elasticsearch_password} | chpasswd
+RUN echo "elasticsearch  ALL=(ALL)       ALL" >> /etc/sudoers && \
+    chown -R elasticsearch /usr/share/elasticsearch
+#    cat /usr/share/elasticsearch/neologd-solr-elasticsearch-synonyms/synonyms/neologd-synonyms.txt > /usr/share/elasticsearch/config/userdict_ja.txt
+RUN wget -qO - https://packages.elastic.co/GPG-KEY-elasticsearch | sudo apt-key add - && \
+    echo "deb http://packages.elastic.co/kibana/4.5/debian stable main" | sudo tee -a /etc/apt/sources.list && \
+    apt-get update && apt-get install kibana && \
+    sudo update-rc.d kibana defaults 95 10
+RUN apt-get install -y jq
+RUN mkdir -p /usr/share/elasticsearch/shell
+#################################################################################################################
+#			COPY Setting Shell in the Docker enviroment			#
+#################################################################################################################
+RUN mkdir -p /usr/share/elasticsearch/dict
+COPY conf/elasticsearch.yml /etc/elasticsearch/
+# ADD SETTING
+COPY conf/elasticsearch /etc/init.d/elasticsearch
+RUN chmod 555 /etc/init.d/elasticsearch
+COPY template/elastic_index_template.json /usr/share/elasticsearch/config/
+COPY shell/elastic_search_setting.sh \
+     shell/elastic_regist_search_json.sh \
+     /usr/share/elasticsearch/shell/
+COPY data/jawiki-20160901-abstract_dir/*.json.gz /usr/share/elasticsearch/data/
+COPY template/dict/userdict_ja.txt \
+     template/dict/stopword.txt \
+     template/dict/synonym.txt \
+     /usr/share/elasticsearch/dict/
+COPY conf ./config
+USER elasticsearch
+EXPOSE 9200 9300 5601
+ENTRYPOINT ["/usr/share/elasticsearch/docker-entrypoint.sh"]
+CMD ["elasticsearch", "-Des.logger.level=OFF & -Des.security.manager.enabled=false & /usr/share/elasticsearch/kibana/bin/kibana -q"]
