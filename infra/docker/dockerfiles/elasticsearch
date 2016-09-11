@@ -62,7 +62,7 @@ RUN echo set bell-style none >> /root/.inputrc
 #################################################################################################################
 #			Setting the Japanese tool for Elastic Search				#
 #################################################################################################################
-RUN apt-get install vim sudo nkf file
+RUN apt-get install -y vim sudo nkf file expect
 # install kuromoji 2.2.1
 RUN /usr/share/elasticsearch/bin/plugin install analysis-kuromoji
 # Warning I confirm working only the version 2.3.0, other older version is not working
@@ -96,6 +96,15 @@ RUN wget -qO - https://packages.elastic.co/GPG-KEY-elasticsearch | sudo apt-key 
 RUN apt-get install -y jq
 RUN mkdir -p /usr/share/elasticsearch/shell
 #################################################################################################################
+#			Install parell for multi processing				#
+#################################################################################################################
+RUN wget http://ftp.gnu.org/gnu/parallel/parallel-20160322.tar.bz2 -P /usr/local
+RUN cd /usr/local && tar xvf parallel-20160322.tar.bz2  && \
+    cd /usr/local/parallel-20160322 && \
+    ./configure
+RUN cd /usr/local/parallel-20160322 && make
+RUN cd /usr/local/parallel-20160322 && make install
+#################################################################################################################
 #			COPY Setting Shell in the Docker enviroment			#
 #################################################################################################################
 RUN mkdir -p /usr/share/elasticsearch/dict
@@ -104,9 +113,7 @@ COPY conf/elasticsearch.yml /etc/elasticsearch/
 COPY conf/elasticsearch /etc/init.d/elasticsearch
 RUN chmod 555 /etc/init.d/elasticsearch
 COPY template/elastic_index_template.json /usr/share/elasticsearch/config/
-COPY shell/elastic_search_setting.sh \
-     shell/elastic_regist_search_json.sh \
-     /usr/share/elasticsearch/shell/
+COPY shell/*.sh /usr/share/elasticsearch/shell/
 COPY data/jawiki-20160901-abstract_dir/*.json.gz /usr/share/elasticsearch/data/
 COPY template/dict/userdict_ja.txt \
      template/dict/stopword.txt \

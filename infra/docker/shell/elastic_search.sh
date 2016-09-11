@@ -15,7 +15,8 @@ if [ $# -ne 1 ]; then
     exit 1
 fi
 
-KEYWORD=$1
+DOUBLE_QUOTE="\""
+KEYWORD=${DOUBLE_QUOTE}${1}${DOUBLE_QUOTE}
 
 curl -XGET 'localhost:9200/_all/_search?pretty' -d'
 {
@@ -25,14 +26,14 @@ curl -XGET 'localhost:9200/_all/_search?pretty' -d'
         {
           "match": {
             "title": {
-              "query": "${KEYWORD}",
+              "query": '$KEYWORD',
               "boost": 10
             }
           }
         },
         {
           "match": {
-            "abstract": "${KEYWORD}"
+            "abstract": '$KEYWORD'
           }
         }
       ]

@@ -9,14 +9,26 @@
 # -- Body ---------------------------------------------------------
 #  SCRIPT LOGIC GOES HERE
 ROOT_DIR=`pwd`
+USER_PASS=e_pass
 
 # Elasticsearchの起動
-sudo /etc/init.d/elasticsearch start &
+expect -c "
+spawn sudo /etc/init.d/elasticsearch start
+expect \"\[sudo\] password for ${USER}: \"
+send -- \"${USER_PASS}\n\"
+expect eof
+exit 0"
+
 sleep 10s
 # 文書登録用テンプレートの反映
 curl -XPUT localhost:9200/_template/contents --data-binary \
      "@config/elastic_index_template.json"
-sudo /etc/init.d/elasticsearch restart
+expect -c "
+spawn sudo /etc/init.d/elasticsearch restart
+expect \"\[sudo\] password for ${USER}: \"
+send -- \"${USER_PASS}\n\"
+expect eof
+exit 0"
 sleep 10s
 echo Register
 # 文書登録処理
