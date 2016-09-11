@@ -14,7 +14,7 @@
 
 # -- Body ---------------------------------------------------------
 #  SCRIPT LOGIC GOES HERE
-if [ $# -ne 2 ]; then
+if [ $# -ne 1 ]; then
     echo "$0 [KEYWORD]"
     exit 1
 fi
