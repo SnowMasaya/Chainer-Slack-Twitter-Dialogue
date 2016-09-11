@@ -20,3 +20,4 @@ requests-oauthlib==0.6.1
 scipy==0.17.0
 six==1.10.0
 websocket-client==0.37.0
+elasticsearch==2.3.0
