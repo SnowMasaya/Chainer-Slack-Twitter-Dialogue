@@ -17,6 +17,8 @@ from twitter.sqlite_twitter_summary import SqliteTwitterSummary
 import pyximport
 pyximport.install()
 from split_data.input_file_cython import InputFileCython
+#QA
+from Question_Answer.get_answer import GetAnswer
 from os import path
 APP_ROOT = path.dirname(path.abspath(__file__))
 import re
@@ -60,6 +62,7 @@ class SlackApp():
         self.word_class_dict = self.sqlite_twitter_summary.make_class_word_dict()
         self.word_class = ""
         self.multi_train_execute = ExecuteAttentionDialogue()
+        self.elastic_search = GetAnswer()
 
     def __make_class_word_vector(self, file_list):
         """
@@ -100,14 +103,22 @@ class SlackApp():
                 start train
         """
         if len(self.data) >= 1 and "text" in self.data[0]:
-            print(self.data[0]["text"])
-            if "chainer:" in self.data[0]["text"]:
-                # input sentence
-                src_batch = self.__input_sentence()
+            input_text = self.data[0]["text"]
+            print(input_text)
+            if "chainer:" in input_text:
                 # predict
-                hyp_batch = self.__predict_sentence(src_batch)
+                if "?" in input_text or "？" in input_text:
+                    replace_input = re.sub("chainer:|\?", "", input_text.strip())
+                    self.elastic_search.search_data(replace_input)
+                    hyp_batch = self.elastic_search.search_result[0]
+                    print(hyp_batch)
+                    word = hyp_batch["title"] + "\n" + hyp_batch["abstract"] + "\n" + hyp_batch["url"]
+                else:
+                    # input sentence
+                    src_batch = self.__input_sentence()
+                    hyp_batch = self.__predict_sentence(src_batch)
+                    word = ''.join(hyp_batch[0]).replace("</s>", "")
                 # show predict word
-                word = ''.join(hyp_batch[0]).replace("</s>", "")
                 print(self.slack_channel.api_call("chat.postMessage", user=self.usr, channel=self.chan, text=word))
             if "chainer_train" in self.data[0]["text"]:
                 self.__setting_parameter()
