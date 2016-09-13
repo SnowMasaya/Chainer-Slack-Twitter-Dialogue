@@ -110,9 +110,12 @@ class SlackApp():
                 if "?" in input_text or "？" in input_text:
                     replace_input = re.sub("chainer:|\?", "", input_text.strip())
                     self.elastic_search.search_data(replace_input)
-                    hyp_batch = self.elastic_search.search_result[0]
-                    print(hyp_batch)
-                    word = hyp_batch["title"] + "\n" + hyp_batch["abstract"] + "\n" + hyp_batch["url"]
+                    if len(self.elastic_search.search_result) > 0:
+                        hyp_batch = self.elastic_search.search_result[0]
+                        print(hyp_batch)
+                        word = hyp_batch["title"] + "\n" + hyp_batch["abstract"] + "\n" + hyp_batch["url"]
+                    else:
+                        word = "No match"
                 else:
                     # input sentence
                     src_batch = self.__input_sentence()

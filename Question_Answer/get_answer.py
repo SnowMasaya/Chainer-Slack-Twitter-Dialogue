@@ -30,6 +30,7 @@ class GetAnswer():
         search data into the elastic search
         param: search_keyword: you set the search key word
         """
+        self.search_result = []
         self.setting_search_query(search_key_word)
         self.res = self.es.search(index=self.elastic_index, body=self.query)
         for hit in self.res['hits']['hits']:
