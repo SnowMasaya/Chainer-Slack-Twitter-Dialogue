@@ -11,3 +11,4 @@ requests==2.8.1
 requests_oauthlib==0.6.1
 future==0.15.2
 websocket-client==0.37.0
+beautifulsoup4==4.5.1

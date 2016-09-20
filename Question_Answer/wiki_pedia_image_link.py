@@ -33,10 +33,12 @@ class WikiPediaImageLink():
 
     def __init__(self):
         self.config_file = APP_ROOT + "/conf/mysql_info.yml"
-        self.read_config()
+        self.__read_config()
         self.image_data_list = []
+        self.format = "https://en.wikipedia.org/wiki/File:"
+        self.__start_mysql()
 
-    def read_config(self):
+    def __read_config(self):
         """
         read config file for mysql
         """
@@ -50,7 +52,7 @@ class WikiPediaImageLink():
            self.host = mysql.host
            self.database = mysql.database
 
-    def start_mysql(self):
+    def __start_mysql(self):
         """
         Start the MySQL
         :return:
@@ -79,9 +81,6 @@ class WikiPediaImageLink():
         # Get the byte array data, convert the bytearray to string
         #     http://stackoverflow.com/questions/10459067/how-to-convert-my-bytearrayb-x9e-x18k-x9a-to-something-like-this-x9e-x1
         for il_to in self.cursor:
-            self.image_data_list.append(il_to[0].decode("utf-8"))
+            self.image_data_list.append(self.format + il_to[0].decode("utf-8"))
         self.cnx.close()
-
-    def get_data_format(self):
-        pass
 
