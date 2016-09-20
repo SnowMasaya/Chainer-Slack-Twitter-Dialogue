@@ -54,7 +54,8 @@ class WikiPediaXmlToJson():
                     # replace method for title extract
                     if extract_data.text is not None:
                         self.index_json.update({ "index" : { "_index" : "wikipedia", "_type" : "contents", "_id" : str(index_count) } })
-                        self.json_data.update({extract_data.tag: extract_data.text.replace("Wikipedia: ", "")})
+                        replace_text = extract_data.text.replace("Wikipedia: ", "")
+                        self.json_data.update({extract_data.tag: replace_text})
                     else:
                         self.index_json.update({ "index" : { "_index" : "wikipedia", "_type" : "contents", "_id" : str(index_count)  } })
                         self.json_data.update({extract_data.tag: extract_data.text})

@@ -20,10 +20,10 @@ class Test_WikiPediaXmlToJson(unittest.TestCase):
         """
         :return:
         """
-        self.wikipedia_abstract_xml = APP_ROOT + "/../Data/jawiki-20160901-abstract_part.xml"
+        self.wikipedia_abstract_xml = APP_ROOT + "/../../Data/jawiki-20160901-abstract_part.xml"
         self.wiki_pedia_xml_to_json = WikiPediaXmlToJson(self.wikipedia_abstract_xml)
-        self.answer_data = APP_ROOT + "/../Data/jawiki-20160901-abstract_part.json"
-        self.correct_data = APP_ROOT + "/../Data/answer.json"
+        self.answer_data = APP_ROOT + "/../../Data/jawiki-20160901-abstract_part.json"
+        self.correct_data = APP_ROOT + "/../../Data/answer.json"
 
     def test_extract_data(self):
         self.wiki_pedia_xml_to_json.input()
