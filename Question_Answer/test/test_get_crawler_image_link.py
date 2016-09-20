@@ -8,26 +8,27 @@ sys.path.append(os.path.join(os.path.dirname("__file__"), "./../"))
 sys.path.append(os.path.join(os.path.dirname("__file__"), "."))
 APP_ROOT = path.dirname(path.abspath(__file__))
 from wiki_pedia_image_link import WikiPediaImageLink
-import filecmp
+from get_crawler_image_link import GetCrawlerImageLink
 
 
-class Test_WikiPediaImageLink(unittest.TestCase):
+class Test_GetCrawlerImageLink(unittest.TestCase):
     """
     Check contents similarity
     """
 
     def setUp(self):
         self.wiki_pedia_image_link = WikiPediaImageLink()
+        self.get_crawler_image_link = GetCrawlerImageLink()
 
     def test_get_like_search(self):
         test_word = "Zundert"
         answer_list = [
-            'https://en.wikipedia.org/wiki/File:Zundert-City_Hall.JPG',
-            'https://en.wikipedia.org/wiki/File:Zundert_church.JPG',
-            'https://en.wikipedia.org/wiki/File:Zundert_gravestone_van_Gogh.JPG'
+            'https//upload.wikimedia.org/wikipedia/commons/b/b5/Zundert-City_Hall.JPG',
         ]
         self.wiki_pedia_image_link.search_like(test_word)
-        self.assertListEqual(self.wiki_pedia_image_link.image_data_list, answer_list)
+        [self.get_crawler_image_link.crawler(url) for url in self.wiki_pedia_image_link.image_data_list]
+        self.assertListEqual(self.get_crawler_image_link.image_link_list, answer_list)
+
 
 if __name__ == '__main__':
     unittest.main()

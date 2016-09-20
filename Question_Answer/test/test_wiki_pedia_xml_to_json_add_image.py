@@ -20,14 +20,13 @@ class Test_WikiPediaXmlToJson(unittest.TestCase):
         """
         :return:
         """
-        self.wikipedia_abstract_xml = APP_ROOT + "/../../Data/jawiki-20160901-abstract_part.xml"
+        self.wikipedia_abstract_xml = APP_ROOT + "/../../Data/wiki_image/enwiki-20080103-abstract_part.xml"
         self.wiki_pedia_xml_to_json = WikiPediaXmlToJson(self.wikipedia_abstract_xml)
-        self.answer_data = APP_ROOT + "/../../Data/jawiki-20160901-abstract_part.json"
-        self.correct_data = APP_ROOT + "/../../Data/answer.json"
+        self.answer_data = APP_ROOT + "/../../Data/wiki_image/enwiki-20080103-abstract_part.json"
+        self.correct_data = APP_ROOT + "/../../Data/wiki_image/answer_image.json"
 
     def test_extract_data(self):
-        self.wiki_pedia_xml_to_json.input()
-        self.assertEqual(filecmp.cmp(self.answer_data, self.correct_data), True)
+        self.wiki_pedia_xml_to_json.input(image_Flag=True)
 
 if __name__ == '__main__':
     unittest.main()
