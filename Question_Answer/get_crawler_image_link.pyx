@@ -2,9 +2,9 @@
 
 import sys
 import os
-sys.path.append(os.path.join(os.path.dirname(__file__), "."))
+sys.path.append(os.path.join(os.path.dirname("__file__"), "."))
 from os import path
-APP_ROOT = path.dirname( path.abspath( __file__ ) )
+APP_ROOT = path.dirname(path.abspath("__file__"))
 import urllib.request
 from bs4 import BeautifulSoup
 
@@ -30,6 +30,7 @@ class GetCrawlerImageLink():
             self.html = resource.read()
             self.__parse()
             resource.close
+            return True
         except urllib.error.HTTPError as err:
             print("HTTPError: " + str(url) + str(err))
             return None
@@ -51,6 +52,7 @@ class GetCrawlerImageLink():
                 self.__check_mage_link(image_link)
             except:
                 print("Small Data and static icon and Not Get the Data")
+                return None
 
     def __check_mage_link(self, image_link):
         """

@@ -7,10 +7,10 @@ sys.path.append(os.path.join(os.path.dirname("__file__"), "./../"))
 sys.path.append(os.path.join(os.path.dirname("__file__"), "."))
 APP_ROOT = path.dirname(path.abspath(__file__))
 import ast
-import pyximport
-pyximport.install()
 from wiki_pedia_xml_to_json import WikiPediaXmlToJson
 import argparse
+from concurrent.futures import ProcessPoolExecutor, as_completed
+
 
 if __name__ == '__main__':
     """
@@ -25,6 +25,8 @@ if __name__ == '__main__':
                         help='set xml file')
     parser.add_argument('--img_flag', '-img', default="False",
                         help='set image Flag')
+    parser.add_argument('--set_worker', '-work', default=2,
+                        help='set image Flag')
     args = parser.parse_args()
     Image_Flag = ast.literal_eval(args.img_flag)
     if Image_Flag is True:
@@ -33,5 +35,14 @@ if __name__ == '__main__':
         wikipedia_abstract_xml = APP_ROOT + "/../Data/jawiki-20160901-abstract_dir/" + args.xml_file
     wiki_pedia_xml_to_json = WikiPediaXmlToJson(wikipedia_abstract_xml)
     wiki_pedia_xml_to_json.input(image_Flag=Image_Flag)
-    for doc in wiki_pedia_xml_to_json.xml_data:
-        wiki_pedia_xml_to_json.extract_contents(doc)
+
+    # Multi Process
+    with ProcessPoolExecutor() as executor:
+        # executor.map(wiki_pedia_xml_to_json.extract_contents, wiki_pedia_xml_to_json.xml_data)
+        all_process = []
+        for xml_name in wiki_pedia_xml_to_json.xml_data:
+            process = executor.submit(wiki_pedia_xml_to_json.extract_contents, xml_name)
+            all_process.append(process)
+
+        for process in as_completed(all_process):
+            print(process.result())

@@ -7,6 +7,8 @@ from os import path
 sys.path.append(os.path.join(os.path.dirname("__file__"), "./../"))
 sys.path.append(os.path.join(os.path.dirname("__file__"), "."))
 APP_ROOT = path.dirname(path.abspath(__file__))
+import pyximport
+pyximport.install()
 from wiki_pedia_image_link import WikiPediaImageLink
 
 
