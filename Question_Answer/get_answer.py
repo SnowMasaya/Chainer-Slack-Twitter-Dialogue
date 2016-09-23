@@ -20,7 +20,7 @@ class GetAnswer():
         """
         Setting initial data
         """
-        self.es = Elasticsearch(['elasticsearch_dialogue'], port=9200,)
+        self.es = Elasticsearch(['elasticsearch_dialogue', 'elasticsearch_dialogue_english'], port=9200,)
         self.doc = {}
         self.elastic_index = "_all"
         self.search_result = []

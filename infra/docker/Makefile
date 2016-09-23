@@ -73,6 +73,7 @@ TAG=$(shell echo $$CIRCLE_SHA1 | cut -c 1-7)
 # correctly.
 DOCKER_RUN_DIALOGUE:=docker run -i -t $(REPO_NAME)/dialogue bash
 DOCKER_RUN_ELASTICSEARCH:=docker run -i -t $(REPO_NAME)/elasticsearch bash
+DOCKER_RUN_ELASTICSEARCH_ENGLISH:=docker run -i -t $(REPO_NAME)/elasticsearch_english bash
 
 # Wildcard rule to build an image from a file inside dockerfiles/
 # Use the tasks like any other dependency. Order may be controller
@@ -100,6 +101,9 @@ test-dialogue: images/dialogue
 
 test-elasticsearch: images/elasticsearch
 	$(DOCKER_RUN_ELASTICSEARCH)
+
+test-elasticsearch-english: images/elasticsearch_english
+	$(DOCKER_RUN_ELASTICSEARCH_ENGLISH)
 
 teardown:
 	$(DOCKER_COMPOSE) stop

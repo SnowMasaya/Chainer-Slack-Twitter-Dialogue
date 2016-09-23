@@ -21,8 +21,8 @@ if [ $# -ne 3 ]; then
 fi
 
 # ENV Viable
-ELS_CONTAINER_NAME="elasticsearch_dialogue"
-ELS_IMAGE_NAME="docker_dialogue/elasticsearch"
+ELS_CONTAINER_NAME="elasticsearch_dialogue_english"
+ELS_IMAGE_NAME="docker_dialogue/elasticsearch_english"
 DIALOGUE_IMAGE_NAME="docker_dialogue/dialogue"
 PIPE_NUMBER=$1
 PARALLEL_NUMBER=$2
@@ -50,16 +50,16 @@ if docker ps | grep "$ELS_CONTAINER_NAME" ; then
 	echo "`logdate` [info] elasticsearch is running"
 	exit 0
 else
-    echo "`logdate` [info] docker run -d --name $ELS_CONTAINER_NAME -p 9200:9200 -it docker_dialogue/elasticsearch /sbin/init"
-    if ! docker run -d --name $ELS_CONTAINER_NAME -p 9200:9200 -it docker_dialogue/elasticsearch /sbin/init; then
+    echo "`logdate` [info] docker run -d --name $ELS_CONTAINER_NAME -p 9200:9200 -it $ELS_IMAGE_NAME /sbin/init"
+    if ! docker run -d --name $ELS_CONTAINER_NAME -p 9200:9200 -it $ELS_IMAGE_NAME /sbin/init; then
     	echo "`logdate` [error] failed to run elasticsearch"
 		exit 1
     fi
 fi
 
 # Setting the Elasticsearch Enviroments
-echo "`logdate` [info] docker exec -it $ELS_CONTAINER_NAME sh shell/elastic_search_setting.sh"
-if ! docker exec -it $ELS_CONTAINER_NAME sh shell/elastic_search_setting.sh; then
+echo "`logdate` [info] docker exec -it $ELS_CONTAINER_NAME sh shell/elastic_search_setting_english.sh"
+if ! docker exec -it $ELS_CONTAINER_NAME sh shell/elastic_search_setting_english.sh; then
 	echo "`logdate` [error] failed to start elasticsearch"
 	exit 1
 fi

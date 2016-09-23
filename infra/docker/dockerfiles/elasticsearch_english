@@ -108,13 +108,12 @@ RUN cd /usr/local/parallel-20160322 && make install
 #			COPY Setting Shell in the Docker enviroment			#
 #################################################################################################################
 RUN mkdir -p /usr/share/elasticsearch/dict
-COPY conf/elasticsearch.yml /etc/elasticsearch/
+COPY conf/elasticsearch_english.yml /etc/elasticsearch/elasticsearch.yml
 # ADD SETTING
 COPY conf/elasticsearch /etc/init.d/elasticsearch
 RUN chmod 555 /etc/init.d/elasticsearch
-COPY template/elastic_index_template.json /usr/share/elasticsearch/config/
+COPY template/elastic_index_template_english.json /usr/share/elasticsearch/config/
 COPY shell/*.sh /usr/share/elasticsearch/shell/
-COPY data/jawiki-20160901-abstract_dir/*.json.gz /usr/share/elasticsearch/data/
 COPY data/wiki_image/*.json.gz /usr/share/elasticsearch/data/image/
 COPY template/dict/userdict_ja.txt \
      template/dict/stopword.txt \

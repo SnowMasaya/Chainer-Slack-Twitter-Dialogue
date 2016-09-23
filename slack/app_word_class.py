@@ -113,7 +113,10 @@ class SlackApp():
                     if len(self.elastic_search.search_result) > 0:
                         hyp_batch = self.elastic_search.search_result[0]
                         print(hyp_batch)
-                        word = hyp_batch["title"] + "\n" + hyp_batch["abstract"] + "\n" + hyp_batch["url"]
+                        if hyp_batch["image"]:
+                            word = hyp_batch["image"] + "\n" + hyp_batch["title"] + "\n" + hyp_batch["abstract"] + "\n" + hyp_batch["url"]
+                        else:
+                            word = hyp_batch["title"] + "\n" + hyp_batch["abstract"] + "\n" + hyp_batch["url"]
                     else:
                         word = "No match"
                 else:
