@@ -10,7 +10,7 @@ import sqlite3
 import re
 
 
-class TwitterGetUserTimeline():
+class TwitterGetUserTimelineModule():
     """
     This module for the getting the twitter dialogue text
     """
@@ -44,11 +44,12 @@ class TwitterGetUserTimeline():
         self.twitter = OAuth1Session(CK, CS, AT, AS)
         self.twitter_txt_dict = {}
         self.p = re.compile(r"@.* ")
-        self.conn = sqlite3.connect('./twitter_data.db')
+        self.conn = sqlite3.connect('./twitter_data.db', check_same_thread=False)
         self.cur = self.conn.cursor()
-        self.first_sqlite()
+        self.__first_sqlite()
+        self.source_replay_dict = {}
 
-    def first_sqlite(self):
+    def __first_sqlite(self):
         """
         Make the table for SQLite
         """
@@ -66,15 +67,15 @@ class TwitterGetUserTimeline():
             # 各ツイートの本文を表示
             if(dict_flag):
                 for tweet in timeline:
-                    self.meke_dict(tweet)
+                    self.__meke_dict(tweet)
             else:
                 for tweet in timeline:
-                    self.check_dict(tweet, dict_value)
+                    self.__check_dict(tweet, dict_value)
         else:
             # エラーの場合
             print ("Error: %d" % req.status_code)
 
-    def meke_dict(self, tweet):
+    def __meke_dict(self, tweet):
         """
         make for the twitter dialogue dict
         :param tweet: tweet_data
@@ -96,9 +97,12 @@ class TwitterGetUserTimeline():
         """
         print("""INSERT INTO %s(source_txt, replay_txt) VALUES(\"%s\", \"%s\")""" % (self.screen_name, s_txt, r_txt))
         values = (id, s_txt, r_txt)
-        self.cur.execute("""INSERT INTO %s(id, source_txt, replay_txt) VALUES (?, ?, ?)""" % self.screen_name, values)
+        try:
+             self.cur.execute("""INSERT INTO %s(id, source_txt, replay_txt) VALUES (?, ?, ?)""" % self.screen_name, values)
+        except sqlite3.ProgrammingError as e:
+            print(e)
 
-    def check_dict(self, tweet, source_dict):
+    def __check_dict(self, tweet, source_dict):
         """
         :param tweet:
         :param source_dict: twitter account tweet contents
@@ -109,16 +113,3 @@ class TwitterGetUserTimeline():
                 source_txt = self.p.sub("", v)
                 replay_txt = self.p.sub("", tweet["text"])
                 self.__insert_sqlite(k, source_txt, replay_txt)
-
-if __name__ == '__main__':
-    twitter_get_user_timeline = TwitterGetUserTimeline()
-    req = twitter_get_user_timeline.twitter.get(twitter_get_user_timeline.url, params = twitter_get_user_timeline.params)
-    # Twitter
-    twitter_get_user_timeline.twitter_method(req)
-    for k,v in twitter_get_user_timeline.twitter_txt_dict.items():
-        params = {"screen_name": k, "exclude_replies": False, "count": 10000}
-        req = twitter_get_user_timeline.twitter.get(twitter_get_user_timeline.url, params = params)
-        twitter_get_user_timeline.twitter_method(req, dict_flag=False, dict_value=v)
-    # SQLite
-    twitter_get_user_timeline.conn.commit()
-    twitter_get_user_timeline.conn.close()
