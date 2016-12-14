@@ -107,7 +107,7 @@ class ExecuteAttentionDialogue(object):
 
     def train_mulit_model(self):
         """
-        Call the Dialogue Training
+        Call the Dialogue Training for multi model
         """
         trace('initializing ...')
         train_path = APP_ROOT + "/../twitter/data/"
@@ -132,6 +132,6 @@ class ExecuteAttentionDialogue(object):
 
 if __name__ == '__main__':
     execute_attention_dialogue = ExecuteAttentionDialogue()
-    execute_attention_dialogue.train()
+    execute_attention_dialogue.train_mulit_model()
     execute_attention_dialogue.test()
 

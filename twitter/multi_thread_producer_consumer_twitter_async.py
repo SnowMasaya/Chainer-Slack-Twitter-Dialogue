@@ -65,8 +65,8 @@ class ProducerConsumerThreadTwitterAsync(object):
                 params = {"screen_name": k, "exclude_replies": False, "count": 10000}
                 req = self.twitter_get_user_timeline.twitter.get(self.twitter_get_user_timeline.url, params = params)
                 self.twitter_get_user_timeline.twitter_method(req, dict_flag=False, dict_value=v)
-                # SQLite
-                self.twitter_get_user_timeline.conn.commit()
+            # SQLite
+            self.twitter_get_user_timeline.conn.commit()
             self.twitter_get_user_timeline.conn.close()
             twiteet_queue.task_done()
             yield from asyncio.sleep(0.5)
